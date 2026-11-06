@@ -1,6 +1,6 @@
 // Offline support for The Snooker Century Game.
 // Bump CACHE when files change so phones pick up the new version.
-const CACHE = "snooker-century-v5";
+const CACHE = "snooker-century-v12";
 const ASSETS = [
   "./",
   "./index.html",
@@ -11,7 +11,12 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // Fetch fresh copies (not the browser's HTTP cache) when installing a new version.
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", event => {
@@ -29,7 +34,8 @@ self.addEventListener("fetch", event => {
   // Pages: network first so updates show up, fall back to cache when offline.
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req)
+      // "no-cache" skips GitHub's 10-minute browser cache so new versions show up straight away.
+      fetch(req, { cache: "no-cache" })
         .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put("./index.html", copy)); return res; })
         .catch(() => caches.match("./index.html"))
     );
