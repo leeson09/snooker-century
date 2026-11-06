@@ -507,6 +507,11 @@
     background: radial-gradient(120% 120% at 50% 0%, var(--brand-hi), var(--brand) 60%, var(--brand-lo));
     box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.35); border: 3px solid var(--wood);
   }
+  /* Finished-player badge */
+  .done-badge { background: linear-gradient(180deg, #f6d36b, #e8b931); color: #1a1408; margin-right: 0.3rem; }
+  .prow.done { opacity: 0.92; }
+  .prow.done .pscore { color: var(--gold); }
+
   /* Fouls: one clear red family; −21 is the strongest */
   .fouls button {
     border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.15); color: #fff;
@@ -785,7 +790,7 @@
     { name: "Red", value: 21, cls: "red", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 12; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 13; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -820,6 +825,7 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       const s = raw ? JSON.parse(raw) : null;
       if (s && Array.isArray(s.players)) s.players.forEach(p => { if (typeof p.name === "string") p.name = p.name.toUpperCase(); });
+      if (s && !Array.isArray(s.finished)) s.finished = []; // saves from before finishing order existed
       return s;
     } catch (_) { return null; }
   }
@@ -871,6 +877,7 @@
       breakBalls: [],
       breaks: [],
       log: [],
+      finished: [], // player indices in the order they reached the target
       winner: null, // index, -1 = draw, null = in progress
       ended: false,
       endReason: null,
@@ -882,7 +889,7 @@
 
   function newRack() {
     state.players.forEach(p => { p.score = 0; p.highBreak = 0; p.centuries = 0; });
-    Object.assign(state, { breakBalls: [], breaks: [], log: [], winner: null, ended: false, endReason: null });
+    Object.assign(state, { breakBalls: [], breaks: [], log: [], finished: [], winner: null, ended: false, endReason: null });
     state.current = (state.current + 1) % state.players.length;
     undoStack = [];
     ui.gain = null; ui.sheet = false;
@@ -895,7 +902,7 @@
     if (!confirm("Reset points?\n\nEvery player's score goes back to 0 and the points history and breaks are cleared.\nPlayers, names, colours and wins are kept. You can Undo this.")) return;
     snapshot();
     state.players.forEach(p => { p.score = 0; p.highBreak = 0; p.centuries = 0; });
-    Object.assign(state, { breakBalls: [], breaks: [], log: [], winner: null, ended: false, endReason: null });
+    Object.assign(state, { breakBalls: [], breaks: [], log: [], finished: [], winner: null, ended: false, endReason: null });
     ui.gain = null;
     ui.modalOpen = false;
     save(); render();
@@ -903,7 +910,15 @@
   }
 
   const breakTotal = () => state.breakBalls.reduce((a, v) => a + v, 0);
-  const nextPlayerIndex = () => (state.current + 1) % state.players.length;
+  // Next player who hasn't reached the target yet (finished players are skipped).
+  const nextPlayerIndex = () => {
+    const n = state.players.length, done = state.finished || [];
+    for (let k = 1; k <= n; k++) {
+      const j = (state.current + k) % n;
+      if (!done.includes(j)) return j;
+    }
+    return (state.current + 1) % n;
+  };
   const addLog = entry => state.log.push({ n: state.log.length + 1, time: Date.now(), ...entry });
 
   function pot(value) {
@@ -931,7 +946,7 @@
     ui.gain = { idx: i, text: delta > 0 ? `+${delta}` : `−${-delta}`, cls: delta > 0 ? "" : "minus" };
     if (delta > 0) sfx.pot(1); else sfx.minus();
     buzz(10);
-    if (delta > 0) checkWinner();
+    checkWinner(); // ▲ can finish a player; ▼ can take a finished player back below the target
     save(); render();
   }
 
@@ -947,6 +962,7 @@
     addLog({ type: "penalty", player: by, value, ball: "Foul", after: p.score });
     ui.gain = { idx: by, text: `−${value}`, cls: "minus" };
     toast(`Foul ${value}! −${value} from ${p.name}`, true);
+    checkWinner(); // a foul can take a finished player back below the target
     save(); render();
   }
 
@@ -1017,9 +1033,27 @@
     setTimeout(() => $("play-again").focus(), 50);
   }
 
+  // Players who have reached the target, in the order they got there (1st, 2nd, 3rd…).
+  // The game only ends when EVERY player has reached the target.
+  const ordinal = n => n + (["th", "st", "nd", "rd"][((n % 100) - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
+  const placeOf = i => (state.finished || []).indexOf(i);
   function checkWinner() {
-    const idx = state.players.findIndex(p => p.score >= state.target);
-    if (idx !== -1) finish(idx, "target");
+    if (!state || state.ended) return;
+    if (!Array.isArray(state.finished)) state.finished = [];
+    // A finished player whose score was corrected back below the target loses their place.
+    state.finished = state.finished.filter(i => i < state.players.length && state.players[i].score >= state.target);
+    // Newly finished players get the next place.
+    state.players.forEach((p, i) => {
+      if (p.score >= state.target && !state.finished.includes(i)) {
+        state.finished.push(i);
+        const place = state.finished.length;
+        if (state.finished.length < state.players.length) {
+          toast(`🏁 ${p.name} finishes ${ordinal(place)}!`);
+          sfx.win(); buzz([60, 40, 60]);
+        }
+      }
+    });
+    if (state.finished.length === state.players.length) finish(state.finished[0], "target");
   }
 
   function endGame() {
@@ -1030,7 +1064,9 @@
     if (!final.ended) {
       const top = Math.max(...final.players.map(p => p.score));
       const leaders = final.players.map((p, i) => (p.score === top ? i : -1)).filter(i => i >= 0);
-      final.winner = leaders.length === 1 ? leaders[0] : -1;
+      const done = Array.isArray(final.finished) ? final.finished : [];
+      // Whoever reached the target first wins; if nobody has, the highest score wins.
+      final.winner = done.length ? done[0] : leaders.length === 1 ? leaders[0] : -1;
       final.endReason = "manual";
       final.ended = true;
     }
@@ -1221,7 +1257,10 @@
               "aria-label": `${p.name}: edit details and view points history`,
               onclick: e => { e.stopPropagation(); openPlayerDialog(i); },
             }, [(i === lead ? "👑 " : "") + p.name]),
-            el("div", { class: "pmeta", text: `${Math.max(0, state.target - p.score)} to go` }),
+            el("div", { class: "pmeta", text: placeOf(i) >= 0 ? `Target reached` : `${Math.max(0, state.target - p.score)} to go` }),
+            placeOf(i) >= 0
+              ? el("span", { class: "badge done-badge", text: `${["🥇", "🥈", "🥉"][placeOf(i)] || "🏁"} ${ordinal(placeOf(i) + 1).toUpperCase()} · FINISHED` })
+              : null,
             isCur ? el("span", { class: "badge", style: `background:${p.color};color:${fg}`, text: "● AT THE TABLE" }) : null,
           ]),
         ]),
@@ -1229,7 +1268,7 @@
         el("div", { "aria-hidden": "true" }), // right spacer keeps points centred
       ]);
 
-      const row = el("article", { class: "prow" + (isCur ? " active" : ""), style: `--pc:${p.color}`, "aria-label": `${p.name}, ${p.score} points` }, [
+      const row = el("article", { class: "prow" + (isCur ? " active" : "") + (placeOf(i) >= 0 ? " done" : ""), style: `--pc:${p.color}`, "aria-label": `${p.name}, ${p.score} points` }, [
         head,
         el("div", { class: "progress", "aria-hidden": "true" }, [el("div", { style: `width:${pct}%` })]),
       ]);
@@ -1556,7 +1595,9 @@
     if (st.winner >= 0) {
       const w = st.players[st.winner];
       title = `🏆 ${w.name} wins!`;
-      text = st.endReason === "target" ? `Reached ${w.score} (target ${st.target}).` : `Game ended with ${w.name} on top at ${w.score}.`;
+      text = st.endReason === "target"
+        ? `Everyone reached the target of ${st.target}. ${w.name} got there first.`
+        : `Game ended with ${w.name} in 1st place.`;
     } else {
       title = "🤝 It's a draw!";
       text = "Players are level on points.";
@@ -1567,7 +1608,13 @@
     const medals = ["🥇", "🥈", "🥉"];
     const tb = $("standings");
     tb.innerHTML = "";
-    st.players.map(p => p).sort((a, b) => b.score - a.score).forEach((p, rank) => {
+    // Finishing order first (1st to reach the target, 2nd…), then anyone not finished by score.
+    const done = Array.isArray(st.finished) ? st.finished : [];
+    const ranked = [
+      ...done.map(i => st.players[i]),
+      ...st.players.filter((_, i) => !done.includes(i)).sort((a, b) => b.score - a.score),
+    ];
+    ranked.forEach((p, rank) => {
       tb.appendChild(el("tr", {}, [
         el("td", { text: medals[rank] || String(rank + 1) }),
         el("td", {}, [dot(p.color), p.name]),
@@ -1980,7 +2027,12 @@
     if (!(s.winner === null || isInt(s.winner, -1, n - 1))) fail("bad winner");
     if (typeof s.ended !== "boolean") fail("bad ended");
     if (!(s.endReason === null || s.endReason === "target" || s.endReason === "manual")) fail("bad reason");
-    return { target: s.target, players, current: s.current, breakBalls, breaks, log, winner: s.winner, ended: s.ended, endReason: s.endReason };
+    let finished = [];
+    if (s.finished !== undefined) {
+      if (!Array.isArray(s.finished) || s.finished.some(i => !isInt(i, 0, n - 1)) || new Set(s.finished).size !== s.finished.length) fail("bad finished");
+      finished = s.finished.slice();
+    }
+    return { target: s.target, players, current: s.current, breakBalls, breaks, log, finished, winner: s.winner, ended: s.ended, endReason: s.endReason };
   }
 
   function restoreFromText(text) {
