@@ -822,6 +822,76 @@
   #splash div { font-family: var(--font-display); letter-spacing: 0.06em; color: #fbf3dc; }
   #splash small { color: #e8c56a; }
 
+  /* =====================================================================
+     AUTO-FIT PLAYER LIST
+     Base sizes per screen width × a scale factor set by fitRows():
+       --kx  one-line rows (shrink/grow to fill the screen)
+       --kt  tall two-line cards (2–3 players)
+       --rowh target row height, --rgap gap between rows
+     ===================================================================== */
+  #players {
+    --av: 46px; --fn: 1.15rem; --fw: 1.05rem; --fs: 2.1rem; --arw: 44px; --arh: 44px;
+    --pa: 32px; --pai: 15px; --fneed: 0.78rem; --fb: 0.72rem;
+    --kx: 1; --kt: 1; --rowh: 0px; --rgap: 0.75rem;
+  }
+  @media (max-width: 560px) {
+    #players { --av: 32px; --fn: 0.86rem; --fw: 0.8rem; --fs: 1.38rem; --arw: 27px; --arh: 34px; --pa: 23px; --pai: 12px; --fneed: 0.62rem; --fb: 0.5rem; }
+  }
+  @media (max-width: 400px) {
+    #players { --av: 25px; --fn: 0.8rem; --fw: 0.72rem; --fs: 1.22rem; --arw: 24px; --arh: 32px; --pa: 20px; --pai: 11px; --fneed: 0.58rem; --fb: 0.46rem; }
+  }
+  #players .prow {
+    min-height: var(--rowh); margin-bottom: var(--rgap);
+    display: flex; flex-direction: column; justify-content: center;
+    transition: min-height 0.2s ease;
+  }
+  #players .prow-head { padding-top: calc(0.45rem * var(--kx)); padding-bottom: calc(0.35rem * var(--kx)); }
+  #players .pleft .avatar { width: calc(var(--av) * var(--kx)); height: calc(var(--av) * var(--kx)); font-size: calc(var(--av) * 0.36 * var(--kx)); }
+  #players .pname, #players button.pname { font-size: calc(var(--fn) * var(--kx)); }
+  #players .pwin { font-size: calc(var(--fw) * var(--kx)); }
+  #players .pcenter .badge { font-size: calc(var(--fb) * var(--kx)); }
+  #players .pslot { height: calc(var(--fb) * 1.7 * var(--kx)); }
+  #players .pneed { font-size: calc(var(--fneed) * var(--kx)); }
+  #players .pact { width: calc(var(--pa) * var(--kx)); height: calc(var(--pa) * var(--kx)); }
+  #players .pact .ic { width: calc(var(--pai) * var(--kx)); height: calc(var(--pai) * var(--kx)); }
+  #players .arrow { width: calc(var(--arw) * var(--kx)); min-height: calc(var(--arh) * var(--kx)); font-size: calc(var(--arw) * 0.38 * var(--kx)); }
+  #players .pscore { font-size: calc(var(--fs) * var(--kx)); }
+
+  /* Extra row height: centre the row's content, progress bar stays at the bottom */
+  #players .prow-head { flex: 1 1 auto; }
+  #players .progress { height: calc(5px * var(--kx)); margin: 0 0.6rem calc(0.45rem * var(--kx)); }
+
+  /* Big three-line cards for 2–3 players:
+       [logo] NAME 👑                       ↺ 🗑
+       AT THE TABLE · Need 72 to go
+       ▼               28               ▲        */
+  #players.tall .prow-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "left acts" "centre centre" "score score";
+    row-gap: calc(0.6rem * var(--kt)); column-gap: 0.75rem;
+    padding: calc(0.75rem * var(--kt)) 0.85rem calc(0.6rem * var(--kt));
+  }
+  #players.tall .pleft { grid-area: left; }
+  #players.tall .pacts { grid-area: acts; }
+  #players.tall .pcenter {
+    grid-area: centre; flex-direction: row; align-items: center; justify-content: flex-start;
+    gap: 0.5rem; text-align: left; justify-self: stretch; overflow: visible;
+  }
+  #players.tall .pslot { height: auto; justify-content: flex-start; }
+  #players.tall .pslot:empty { display: none; }
+  #players.tall .pmid { grid-area: score; justify-content: space-between; justify-self: stretch; }
+  #players.tall .progress { height: calc(6px * var(--kt)); margin: 0 0.85rem calc(0.6rem * var(--kt)); }
+  #players.tall .pleft .avatar { width: calc(44px * var(--kt)); height: calc(44px * var(--kt)); font-size: calc(15px * var(--kt)); }
+  #players.tall .pname, #players.tall button.pname { font-size: calc(1.15rem * var(--kt)); }
+  #players.tall .pwin { font-size: calc(1.05rem * var(--kt)); }
+  #players.tall .pcenter .badge { font-size: calc(0.64rem * var(--kt)); padding: 0.12rem 0.5rem; }
+  #players.tall .pneed { font-size: calc(0.9rem * var(--kt)); white-space: nowrap; }
+  #players.tall .pact { width: calc(32px * var(--kt)); height: calc(32px * var(--kt)); }
+  #players.tall .pact .ic { width: calc(15px * var(--kt)); height: calc(15px * var(--kt)); }
+  #players.tall .arrow { width: calc(44px * var(--kt)); min-height: calc(44px * var(--kt)); font-size: calc(17px * var(--kt)); }
+  #players.tall .pscore { font-size: calc(2.6rem * var(--kt)); width: auto; min-width: 3ch; }
+  #players.tall .pmid { gap: calc(0.35rem * var(--kt)); }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .float-pts, .confetti { display: none; }
@@ -1062,7 +1132,7 @@
     { name: "Red", value: 21, cls: "red", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 20; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 21; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -1354,6 +1424,55 @@
     if (!ui.sheet) scrollToCurrent();
   }
 
+  // ================= Auto-fit the player list to the screen =================
+  // Few players → tall two-line cards; more players → one-line rows that stretch or shrink.
+  // Rows only scroll when everyone can't fit at a readable size.
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  function fitRows() {
+    const wrap = $("players");
+    if (!state || !wrap) return;
+    const rows = [...wrap.querySelectorAll(".prow")];
+    if (!rows.length || !wrap.getBoundingClientRect) return;
+    const vw = document.documentElement.clientWidth || window.innerWidth;
+    const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    const main = wrap.closest("main");
+    const padB = main ? parseFloat(getComputedStyle(main).paddingBottom) || 16 : 16;
+    const top = wrap.getBoundingClientRect().top + (window.scrollY || 0);
+    const n = rows.length;
+    const gap = n <= 3 ? 12 : n <= 6 ? 9 : 6;
+    const avail = vh - top - padB;
+    const target = Math.floor((avail - gap * (n - 1)) / n);
+
+    // Reset, then measure a row's natural height at normal size.
+    wrap.style.setProperty("--kx", "1");
+    wrap.style.setProperty("--kt", "1");
+    wrap.style.setProperty("--rowh", "0px");
+    wrap.style.setProperty("--rgap", gap + "px");
+    const tall = target >= 170;
+    wrap.classList.toggle("tall", tall);
+    if (tall) {
+      // Big three-line cards; the full-width ▼ score ▲ bar sets how big they can get.
+      const ktMax = clamp((vw - 40) / 240, 1, 1.9);
+      wrap.style.setProperty("--kt", clamp(target / 175, 1, ktMax).toFixed(3));
+    } else {
+      const natural = rows[0].offsetHeight || 60;
+      // Phones: rows stretch in height only (text keeps its size so names never get cut),
+      // or shrink a little to squeeze more players on. Wide screens may also grow the text.
+      const kxMax = vw <= 560 ? 1 : clamp(1 + (vw - 560) / 800, 1, 1.3);
+      wrap.style.setProperty("--kx", clamp(target / natural, 0.78, kxMax).toFixed(3));
+    }
+    wrap.style.setProperty("--rowh", Math.max(0, target) + "px");
+  }
+  let fitQueued = false;
+  function queueFit() {
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(() => { fitQueued = false; fitRows(); });
+  }
+  window.addEventListener("resize", queueFit);
+  window.addEventListener("orientationchange", queueFit);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", queueFit);
+
   // Keep the player at the table visible in long lists.
   function scrollToCurrent() {
     if (!state) return;
@@ -1482,7 +1601,14 @@
     const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
     return lum > 0.55 ? "#111111" : "#ffffff";
   }
-  const initials = name => name.trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
+  // Logo letters: "ASHA KUMAR" → "AK"; names ending in a number keep it ("PLAYER 10" → "P10").
+  const initials = name => {
+    const words = name.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return "?";
+    const last = words[words.length - 1];
+    if (words.length > 1 && /^\d{1,2}$/.test(last)) return (words[0][0] + last).toUpperCase();
+    return words.map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  };
   const fmtTime = t => new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const miniBall = v => {
     const b = BALL_BY_VALUE[v];
@@ -1610,10 +1736,8 @@
   function renderPlayers() {
     const wrap = $("players");
     wrap.innerHTML = "";
-    // More than 4 players: one-line rows so most of the list fits without scrolling.
-    const compact = state.players.length > 4;
-    wrap.classList.toggle("compact", compact);
-    $("players-hint").classList.toggle("hidden", compact);
+    // Row sizes are set by fitRows() after rendering; the hint is dropped when space is tight.
+    $("players-hint").classList.toggle("hidden", state.players.length > 4);
     const lead = leaderIdx();
     state.players.forEach((p, i) => {
       const isCur = i === state.current && !state.ended;
@@ -2068,6 +2192,7 @@
     const cur = state.players[state.current];
     $("subtitle").textContent = state.ended ? `Target ${state.target} · Game over` : `Target ${state.target} · ${cur.name} at the table`;
     renderPlayers();
+    fitRows();
     renderSheet();
     ui.gain = null; // animate once per action
     renderHistory();
