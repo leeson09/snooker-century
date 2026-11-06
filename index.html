@@ -145,7 +145,7 @@
   }
   label { display: block; font-weight: 800; margin: 0.75rem 0 0.35rem; }
   /* Player names are always in capitals */
-  .setup-row input[type="text"], #addp-name, #sh-name-input, #pd-name { text-transform: uppercase; }
+  .setup-row input[type="text"], #addp-name, #pd-name { text-transform: uppercase; }
 
   .card { background: var(--surface); border-radius: 16px; padding: 1rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
   .card h2 { margin: 0 0 0.75rem; font-size: 1.25rem; }
@@ -507,6 +507,108 @@
     background: radial-gradient(120% 120% at 50% 0%, var(--brand-hi), var(--brand) 60%, var(--brand-lo));
     box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.35); border: 3px solid var(--wood);
   }
+  /* ---------- Compact rows (more than 4 players) ----------
+     One line per player:  [ball] NAME / meta ............ ▼ 28 ▲  */
+  /* ---------- Player row layout (all sizes) ----------
+       [colour] NAME ✎   |   ● AT THE TABLE          |   ▼  28  ▲
+                         |   Need 72 to go (small)   |                */
+  #players .prow-head {
+    /* logo + name | status (fills the gap, centred) | ↺/🗑 | ▼ score ▲ */
+    display: grid; grid-template-columns: fit-content(44%) minmax(0, 1fr) auto auto;
+    align-items: center; gap: 0.6rem; padding: 0.7rem 0.75rem 0.55rem;
+  }
+  #players .pleft { display: flex; align-items: center; gap: 0.55rem; min-width: 0; }
+  #players .pleft .avatar { width: 46px; height: 46px; }
+  #players .pname {
+    min-width: 0; font-size: 1.15rem; font-weight: 900; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-decoration: none; border-bottom: 3px solid var(--pc); padding-bottom: 1px; line-height: 1.2;
+  }
+  #players .pedit {
+    flex: none; width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 10px; font-size: 1rem;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+  }
+  /* Name is a button (opens edit/history) but looks like the name text */
+  #players button.pname {
+    background: none; border: none; border-bottom: 3px solid var(--pc); border-radius: 0;
+    padding: 0 0 1px; min-height: 0; text-align: left; cursor: pointer; box-shadow: none;
+  }
+  #players button.pname:active { transform: none; opacity: 0.7; }
+  /* Per-player ↺ and 🗑 — side by side, same size, smaller than the ▼▲ arrows, white icons */
+  #players .pacts { display: flex; flex-direction: row; align-items: center; gap: 0.3rem; }
+  #players .pact {
+    min-height: 0; width: 32px; height: 32px; padding: 0; border-radius: 9px;
+    background: #44544c; border: 1px solid rgba(255, 255, 255, 0.12); color: #ffffff;
+  }
+  [data-theme="dark"] #players .pact { background: #24362d; border-color: #35493f; }
+  #players .pact:disabled { opacity: 0.35; }
+  /* Winner icon after the name (medal when finished, 👑 for the leader) */
+  #players .pwin { flex: none; font-size: 1.05rem; line-height: 1; }
+  /* Player logo on the rows is display-only (colour changes via the name → edit) */
+  #players .pleft .avatar { flex: none; }
+  #players .pact { display: inline-flex; align-items: center; justify-content: center; }
+  #players .pact .ic { flex: none; width: 15px; height: 15px; }
+  /* Fixed-height slot for "● AT THE TABLE" so "Need N to go" sits at the same height on every row */
+  #players .pslot { height: 1.15rem; display: flex; align-items: center; justify-content: center; }
+  #players .pcenter {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.2rem; text-align: center; min-width: 0; justify-self: stretch;
+  }
+  #players .pcenter .badge { margin: 0; }
+  #players .pneed { font-size: 0.78rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+  #players .pmid { display: flex; flex-direction: row; align-items: center; gap: 0.35rem; position: relative; }
+  #players .arrow { width: 44px; min-height: 44px; font-size: 1rem; border-radius: 12px; }
+  #players .pscore { font-size: 2.1rem; width: 3ch; min-width: 3ch; padding: 0; text-align: center; }
+  #players .pmid .float-pts { left: auto; right: 100%; top: -0.6rem; font-size: 1.6rem; }
+
+  /* Phones: tighter so name, status and ▼ score ▲ fit on one line */
+  @media (max-width: 560px) {
+    main { padding-left: max(0.6rem, env(safe-area-inset-left)); padding-right: max(0.6rem, env(safe-area-inset-right)); }
+    #players .prow { border-left-width: 6px; }
+    #players .prow-head { grid-template-columns: fit-content(40%) minmax(0, 1fr) auto auto; gap: 0.3rem; padding: 0.5rem 0.4rem 0.4rem 0.45rem; }
+    #players .pleft { gap: 0.3rem; }
+    #players .pleft .avatar { width: 30px; height: 30px; font-size: 0.68rem; }
+    #players button.avatar::after { width: 14px; height: 14px; font-size: 0.45rem; right: -3px; bottom: -3px; }
+    #players .pname, #players button.pname { font-size: 0.9rem; border-bottom-width: 2px; letter-spacing: 0; }
+    #players .pact { width: 23px; height: 23px; border-radius: 6px; }
+    #players .pact .ic { width: 12px; height: 12px; }
+    #players .pacts { gap: 0.15rem; }
+    #players .pwin { font-size: 0.85rem; }
+    #players .pslot { height: 0.95rem; }
+    #players .pedit { width: 24px; height: 24px; font-size: 0.72rem; border-radius: 7px; }
+    #players .pcenter { gap: 0.1rem; }
+    #players .pcenter .badge { font-size: 0.52rem; padding: 0.08rem 0.3rem; letter-spacing: 0.02em; }
+    #players .pneed { font-size: 0.62rem; }
+    #players .arrow { width: 27px; min-height: 34px; font-size: 0.72rem; border-radius: 8px; }
+    #players .pmid { gap: 0.15rem; }
+    #players .pscore { font-size: 1.38rem; width: 3ch; min-width: 3ch; } /* fixed width keeps every row's columns aligned */
+    #players .pmid .float-pts { font-size: 1.3rem; }
+  }
+
+  /* Phones up to 400px (360px Android, 375/390/393px iPhones): compact sizing so everything fits on one line */
+  @media (max-width: 400px) {
+    #players .prow-head { gap: 0.22rem; padding-left: 0.4rem; padding-right: 0.35rem; }
+    #players .pleft { gap: 0.22rem; }
+    #players .pleft .avatar { width: 25px; height: 25px; font-size: 0.6rem; }
+    #players .pname, #players button.pname { font-size: 0.8rem; }
+    #players .pwin { font-size: 0.75rem; }
+    #players .pcenter .badge { font-size: 0.46rem; padding: 0.06rem 0.25rem; letter-spacing: 0; }
+    #players .pneed { font-size: 0.58rem; white-space: normal; line-height: 1.1; }
+    #players .pact { width: 20px; height: 20px; border-radius: 5px; }
+    #players .pact .ic { width: 11px; height: 11px; }
+    #players .pacts { gap: 0.12rem; }
+    #players .arrow { width: 24px; min-height: 32px; font-size: 0.66rem; }
+    #players .pmid { gap: 0.1rem; }
+    #players .pscore { font-size: 1.22rem; }
+  }
+  /* Safety net at every size: the middle column may wrap but never overlaps its neighbours */
+  #players .pcenter { overflow: hidden; }
+
+  /* More than 4 players: slimmer rows so most of the list fits without scrolling */
+  #players.compact .prow { margin-bottom: 0.45rem; border-left-width: 7px; border-radius: 14px; }
+  #players.compact .prow-head { padding-top: 0.4rem; padding-bottom: 0.3rem; }
+  #players.compact .progress { height: 4px; margin: 0 0.55rem 0.35rem; }
+
   /* Finished-player badge */
   .done-badge { background: linear-gradient(180deg, #f6d36b, #e8b931); color: #1a1408; margin-right: 0.3rem; }
   .prow.done { opacity: 0.92; }
@@ -551,6 +653,174 @@
   /* Toast & game-over banner */
   .toast { background: linear-gradient(180deg, #f6d36b, #e8b931); border: 1px solid rgba(0, 0, 0, 0.08); }
   .gameover { border: 2px solid var(--gold-soft); background: linear-gradient(180deg, color-mix(in srgb, var(--gold-soft) 18%, var(--surface)), var(--surface)); }
+
+  /* =====================================================================
+     PREMIUM THEME — "Midnight baize": deep felt, charcoal glass, fine gold
+     Colours, borders and shadows only (sizes live in the layout rules above).
+     ===================================================================== */
+  :root {
+    --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --bg: #f5f0e6; --panel: #fffdf8; --card-hi: #ffffff; --card-lo: #fbf7ef;
+    --surface: #fffdf8; --surface-2: #f1ebdf; --border: #e4d9c3; --hair: rgba(160, 124, 40, 0.22);
+    --text: #1b1a14; --muted: #6b6656;
+    --brand: #0d4f35; --brand-hi: #136345; --brand-lo: #083522;
+    --gold: #a8822b; --gold-soft: #d8b45a; --gold-hi: #ecd492; --gold-lo: #c39a3f;
+    --accent: #c39a3f; --accent-hi: #ecd492; --accent-text: #1d1608;
+    --plus: #0f7a45; --minus: #c0392b; --danger: #b3261e;
+    --shadow: 0 1px 1px rgba(40, 30, 10, 0.04), 0 8px 24px rgba(40, 30, 10, 0.08);
+    --shadow-lg: 0 24px 64px rgba(20, 14, 4, 0.28);
+    --glass: rgba(255, 253, 248, 0.86);
+  }
+  [data-theme="dark"] {
+    --bg: #060b08; --panel: #0d1712; --card-hi: #14231b; --card-lo: #0d1813;
+    --surface: #111d17; --surface-2: #18271f; --border: #223629; --hair: rgba(232, 197, 106, 0.16);
+    --text: #f3efe4; --muted: #98ab9f;
+    --brand: #0c3a27; --brand-hi: #125238; --brand-lo: #061f14;
+    --gold: #e8c56a; --gold-soft: #e8c56a; --gold-hi: #f6dd98; --gold-lo: #c9a043;
+    --accent: #c9a043; --accent-hi: #f6dd98; --accent-text: #1d1608;
+    --plus: #86e3ae; --minus: #ff8f84; --danger: #c7372f;
+    --shadow: 0 1px 1px rgba(0, 0, 0, 0.5), 0 10px 28px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 28px 80px rgba(0, 0, 0, 0.7);
+    --glass: rgba(13, 23, 18, 0.88);
+  }
+
+  body {
+    background:
+      radial-gradient(1100px 520px at 50% -220px, color-mix(in srgb, var(--brand-hi) 38%, transparent), transparent 70%),
+      radial-gradient(900px 600px at 100% 120%, color-mix(in srgb, var(--gold) 7%, transparent), transparent 70%),
+      var(--bg);
+    background-attachment: fixed;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Top bar: deep felt, gold hairline, serif wordmark */
+  .topbar {
+    background: linear-gradient(180deg, var(--brand-hi) 0%, var(--brand) 55%, var(--brand-lo) 100%);
+    border-bottom: 1px solid var(--gold-soft);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 10px 30px rgba(0, 0, 0, 0.28);
+  }
+  .topbar h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; letter-spacing: 0.04em; color: #fbf3dc; }
+  .topbar .sub { color: var(--gold-hi); font-weight: 700; letter-spacing: 0.02em; }
+  .icon-btn {
+    border-radius: 50%; width: 44px; padding: 0;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(232, 197, 106, 0.35); color: #fbf3dc;
+  }
+
+  /* Buttons: gold primary, crimson danger, glass secondary */
+  .primary, .stepper button, .drawer .item.primary, .stack button.primary, .tabs button[aria-selected="true"] {
+    background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo)); color: var(--accent-text);
+    border: 1px solid color-mix(in srgb, var(--gold-lo) 70%, #000); box-shadow: 0 4px 14px color-mix(in srgb, var(--gold-lo) 35%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+  .danger, .drawer .item.danger {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--danger) 80%, #fff), var(--danger)); color: #fff;
+    border: 1px solid color-mix(in srgb, var(--danger) 70%, #000); box-shadow: 0 4px 14px color-mix(in srgb, var(--danger) 30%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .ghost { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+  #start { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: 0.04em; }
+
+  /* Cards (setup) */
+  .card { background: linear-gradient(180deg, var(--card-hi), var(--card-lo)); border: 1px solid var(--hair); box-shadow: var(--shadow); }
+  .card h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.03em; }
+  .card h2::before { background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo)); width: 4px; }
+  .setup-row { background: var(--surface-2); border: 1px solid var(--border); }
+  input[type="text"], input[type="number"] { background: var(--panel); border-color: var(--border); color: var(--text); }
+  input[type="text"]:focus, input[type="number"]:focus { border-color: var(--gold-lo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 22%, transparent); }
+
+  /* Player rows */
+  #players .prow {
+    background: linear-gradient(180deg, var(--card-hi), var(--card-lo));
+    border: 1px solid var(--hair); border-left: 4px solid var(--pc);
+    box-shadow: var(--shadow);
+  }
+  #players .prow.active {
+    border-color: color-mix(in srgb, var(--pc) 70%, transparent); border-left-color: var(--pc);
+    box-shadow: 0 0 0 1px var(--pc), 0 12px 32px color-mix(in srgb, var(--pc) 26%, transparent);
+  }
+  #players .prow.active .prow-head { background: linear-gradient(90deg, color-mix(in srgb, var(--pc) 14%, transparent), transparent 75%); }
+  #players .avatar { box-shadow: inset -3px -4px 8px rgba(0, 0, 0, 0.3), 0 0 0 2px color-mix(in srgb, var(--pc, #000) 25%, transparent); }
+  #players .pneed { color: var(--muted); letter-spacing: 0.01em; }
+  #players .pscore { color: var(--text); }
+  #players .prow.done .pscore { color: var(--gold); }
+  #players .arrow { background: var(--surface-2); border: 1px solid var(--border); }
+  #players .pact { background: #2c3a33; border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; }
+  [data-theme="dark"] #players .pact { background: #1d2e25; border-color: #2f463a; }
+  #players .progress { background: color-mix(in srgb, var(--surface-2) 80%, transparent); }
+  .badge { letter-spacing: 0.06em; }
+
+  /* ---- Alignment: identical column widths on every row, so "Need N to go" lines up exactly ---- */
+  #players .prow-head { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto auto; }
+  @media (max-width: 560px) {
+    /* Phones: a little more room for "NAME 👑" while every row still shares the same columns */
+    #players .prow-head { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto auto; }
+    /* "Need 86 to go" may wrap onto two short lines instead of being cut off */
+    #players .pneed { white-space: normal; line-height: 1.12; overflow-wrap: anywhere; }
+    #players .pname, #players button.pname { font-size: 0.86rem; }
+    #players .pwin { font-size: 0.8rem; }
+    #players .pcenter .badge { font-size: 0.5rem; padding: 0.08rem 0.32rem; letter-spacing: 0.03em; }
+  }
+  @media (max-width: 400px) {
+    #players .pname, #players button.pname { font-size: 0.8rem; }
+    #players .pwin { font-size: 0.72rem; }
+    #players .pcenter .badge { font-size: 0.46rem; padding: 0.06rem 0.25rem; letter-spacing: 0; }
+  }
+
+  /* Side menu */
+  .drawer { background: var(--panel); border-right: 1px solid var(--gold-soft); }
+  .drawer-head { background: linear-gradient(180deg, var(--brand-hi), var(--brand-lo)); border-bottom: 1px solid var(--gold-soft); }
+  .drawer-head strong { font-family: var(--font-display); letter-spacing: 0.05em; color: #fbf3dc; }
+  .drawer .item { background: var(--surface); border: 1px solid var(--border); }
+  .drawer .item.warn { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); }
+  .menu-section { color: var(--gold); opacity: 0.85; }
+
+  /* Every pop-up: glass panel with a gold hairline */
+  .overlay { background: rgba(3, 8, 5, 0.66); }
+  .modal { background: var(--panel); border: 1px solid var(--hair); box-shadow: var(--shadow-lg); }
+  .modal::before { height: 4px; }
+  .modal h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.02em; }
+  .modal-head, .sheet-head { border-bottom-color: var(--hair); }
+  #winner-title { color: var(--gold); }
+  .table-wrap { border-color: var(--hair); background: var(--surface); }
+  th { background: var(--surface-2); color: var(--gold); }
+  .chip { background: var(--surface); border-color: var(--border); }
+
+  /* Scoring pop-up */
+  .balls { border: 2px solid color-mix(in srgb, var(--gold-lo) 55%, #5a3418); box-shadow: inset 0 3px 14px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.05); }
+  .sh-score { color: var(--text); }
+  .next-btn {
+    width: 100%; margin-top: 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.85rem 1rem; border-radius: 14px; background: var(--surface-2); color: var(--text);
+    border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--border));
+  }
+  .next-btn .next-lbl { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+  .next-btn .next-who { font-size: 1.05rem; font-weight: 900; display: inline-flex; align-items: center; }
+
+  /* Themed confirm */
+  #ask { z-index: 15; }
+  .ask-modal { max-width: 400px; text-align: center; padding-bottom: 1.2rem; }
+  .ask-icon {
+    width: 58px; height: 58px; margin: 0.25rem auto 0.7rem; border-radius: 50%; display: grid; place-items: center;
+    font-size: 1.6rem; color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+  }
+  .ask-icon.danger { color: var(--minus); background: color-mix(in srgb, var(--danger) 14%, transparent); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+  #ask-title { font-size: 1.35rem; margin: 0 0 0.4rem; }
+  #ask-msg { margin: 0 0 1.1rem; color: var(--muted); font-weight: 600; line-height: 1.45; }
+  .ask-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .ask-actions button { min-height: 48px; }
+
+  /* Messages (toasts): dark glass pill with gold text, in both themes */
+  .toast {
+    background: rgba(10, 20, 15, 0.92); color: var(--gold-hi, #f6dd98); border: 1px solid rgba(232, 197, 106, 0.55);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    letter-spacing: 0.01em;
+  }
+  .toast.foul { background: rgba(60, 12, 10, 0.94); color: #ffd1cb; border-color: rgba(255, 143, 132, 0.6); }
+  .gameover { border: 1px solid var(--gold-soft); background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 14%, var(--panel)), var(--panel)); }
+
+  /* Launch screen */
+  html.standalone #splash { background: radial-gradient(circle at 50% 40%, #125238 0%, #0c3a27 50%, #061f14 100%); }
+  #splash div { font-family: var(--font-display); letter-spacing: 0.06em; color: #fbf3dc; }
+  #splash small { color: #e8c56a; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -606,7 +876,7 @@
       </div>
     </div>
 
-    <p class="muted small" style="margin:0 0 0.6rem">Tap a player to score. Tap a name to edit or see history.</p>
+    <p class="muted small" id="players-hint" style="margin:0 0 0.6rem">Tap a player to score. Tap a name to edit or see history.</p>
     <div id="players"></div>
   </section>
 </main>
@@ -653,24 +923,13 @@
 <div id="sheet" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="sh-name">
   <div class="modal" id="sh-modal">
     <div class="sheet-head" id="sh-head">
-      <button type="button" class="avatar" id="sh-avatar" aria-haspopup="dialog" title="Change colour"></button>
+      <!-- Scoring only: player colour, name and score -->
+      <div class="avatar" id="sh-avatar" aria-hidden="true"></div>
       <div class="who">
-        <div class="name-line" id="sh-name-line">
-          <h2 id="sh-name"></h2>
-          <button type="button" class="ghost edit-btn" id="sh-edit" aria-label="Edit name">✎ Edit</button>
-        </div>
-        <form class="name-edit hidden" id="sh-name-form">
-          <input type="text" id="sh-name-input" maxlength="24" autocomplete="off" autocapitalize="characters" aria-label="Player name" />
-          <button type="submit" class="primary" aria-label="Save name">✔</button>
-          <button type="button" id="sh-name-cancel" aria-label="Cancel editing">✕</button>
-        </form>
+        <h2 id="sh-name"></h2>
         <div class="pmeta" id="sh-meta"></div>
       </div>
-      <div class="sh-pts">
-        <button type="button" class="arrow up" id="sh-up" data-fk="sh-up" aria-label="Add 1 point">▲</button>
-        <div class="sh-score" id="sh-score"></div>
-        <button type="button" class="arrow down" id="sh-down" data-fk="sh-down" aria-label="Take 1 point">▼</button>
-      </div>
+      <div class="sh-score" id="sh-score"></div>
       <button type="button" class="ghost" id="sh-close" aria-label="Close scoring">✕</button>
     </div>
     <div id="sh-body"></div>
@@ -726,6 +985,19 @@
       <button type="button" id="addp-cancel">Cancel</button>
     </div>
   </form>
+</div>
+
+<!-- ========== Themed confirm (replaces the browser's plain OK/Cancel box) ========== -->
+<div id="ask" class="overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="ask-title" aria-describedby="ask-msg">
+  <div class="modal ask-modal" id="ask-modal">
+    <div class="ask-icon" id="ask-icon" aria-hidden="true">?</div>
+    <h2 id="ask-title"></h2>
+    <p id="ask-msg"></p>
+    <div class="ask-actions">
+      <button type="button" class="ghost" id="ask-no">Cancel</button>
+      <button type="button" class="primary" id="ask-yes">OK</button>
+    </div>
+  </div>
 </div>
 
 <!-- ========== Colour picker ========== -->
@@ -790,7 +1062,7 @@
     { name: "Red", value: 21, cls: "red", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 13; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 20; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -897,9 +1169,13 @@
   }
 
   // Side menu → Reset points: every score back to 0. Players, names, colours, wins and turn are kept.
-  function resetPoints() {
+  async function resetPoints() {
     if (!state) return;
-    if (!confirm("Reset points?\n\nEvery player's score goes back to 0 and the points history and breaks are cleared.\nPlayers, names, colours and wins are kept. You can Undo this.")) return;
+    const okGo = await askConfirm({
+      title: "Reset all points?", icon: "↺", confirmText: "Reset points",
+      message: "Every player goes back to 0 and the points history and breaks are cleared. Players, names, colours and wins are kept. You can Undo this.",
+    });
+    if (!okGo || !state) return;
     snapshot();
     state.players.forEach(p => { p.score = 0; p.highBreak = 0; p.centuries = 0; });
     Object.assign(state, { breakBalls: [], breaks: [], log: [], finished: [], winner: null, ended: false, endReason: null });
@@ -907,6 +1183,95 @@
     ui.modalOpen = false;
     save(); render();
     toast("🔁 All points reset to 0");
+  }
+
+  // ================= Themed confirm dialog =================
+  // askConfirm({ title, message, confirmText, icon, danger }) → Promise<boolean>
+  let askResolve = null, askFocus = null;
+  function askConfirm({ title, message, confirmText = "OK", icon = "?", danger = false }) {
+    if (askResolve) askResolve(false); // only one at a time
+    askFocus = document.activeElement;
+    $("ask-title").textContent = title;
+    $("ask-msg").textContent = message;
+    $("ask-icon").textContent = icon;
+    $("ask-icon").classList.toggle("danger", danger);
+    const yes = $("ask-yes");
+    yes.textContent = confirmText;
+    yes.className = danger ? "danger" : "primary";
+    $("ask").classList.remove("hidden");
+    document.body.classList.add("lock");
+    setTimeout(() => $("ask-no").focus(), 30); // safe default: Cancel
+    return new Promise(res => { askResolve = res; });
+  }
+  function closeAsk(answer) {
+    if (!askResolve) return;
+    const res = askResolve;
+    askResolve = null;
+    $("ask").classList.add("hidden");
+    if (state) renderResults(); else document.body.classList.toggle("lock", !!ui.final || ui.bkp);
+    if (askFocus && document.contains(askFocus)) askFocus.focus({ preventScroll: true });
+    res(answer);
+  }
+  $("ask-yes").addEventListener("click", () => closeAsk(true));
+  $("ask-no").addEventListener("click", () => closeAsk(false));
+  $("ask").addEventListener("click", e => { if (e.target.id === "ask") closeAsk(false); });
+
+  // Row button ↺: one player's score back to 0 (logged, undoable).
+  async function resetPlayerScore(i) {
+    if (!state || state.ended) return;
+    const p = state.players[i];
+    if (p.score === 0) return;
+    const okGo = await askConfirm({
+      title: `Reset ${p.name} to 0?`, icon: "↺", confirmText: "Reset to 0",
+      message: `${p.name}'s score of ${p.score} goes back to 0. You can Undo this.`,
+    });
+    if (!okGo || !state || state.players[i] !== p) return;
+    snapshot();
+    const before = p.score;
+    if (i === state.current) state.breakBalls = []; // their running break no longer counts
+    p.score = 0;
+    addLog({ type: "reset", player: i, value: before, ball: "Reset", after: 0 });
+    ui.gain = { idx: i, text: "0", cls: "minus" };
+    sfx.minus(); buzz(20);
+    toast(`↺ ${p.name} reset to 0`);
+    checkWinner(); // they may lose a finishing place
+    save(); render();
+  }
+
+  // Row button 🗑: remove a player from the game (undoable). Keeps at least 2 players.
+  async function deletePlayer(i) {
+    if (!state || state.ended) return;
+    if (state.players.length <= MIN_PLAYERS) { toast(`A game needs at least ${MIN_PLAYERS} players`); return; }
+    const p = state.players[i];
+    const okGo = await askConfirm({
+      title: `Delete ${p.name}?`, icon: "🗑", confirmText: "Delete player", danger: true,
+      message: "Their score, points history and breaks will be removed from this game. You can Undo this.",
+    });
+    if (!okGo || !state || state.players[i] !== p) return;
+    snapshot();
+    const shift = j => (j > i ? j - 1 : j); // indices after i move down by one
+
+    // Turn: if the deleted player was at the table, the next player takes over.
+    if (state.current === i) {
+      state.breakBalls = [];
+      state.current = i % (state.players.length - 1);
+    } else {
+      state.current = shift(state.current);
+    }
+    state.players.splice(i, 1);
+
+    // Remove their history and breaks; renumber everyone else.
+    state.log = state.log
+      .filter(e => e.player !== i && e.by !== i)
+      .map((e, k) => ({ ...e, n: k + 1, player: shift(e.player), ...(e.by !== undefined ? { by: shift(e.by) } : {}) }));
+    state.breaks = state.breaks.filter(b => b.player !== i).map(b => ({ ...b, player: shift(b.player) }));
+    state.finished = (state.finished || []).filter(j => j !== i).map(shift);
+
+    ui.gain = null;
+    if (ui.tab.startsWith("p")) ui.tab = "all";
+    toast(`🗑 ${p.name} removed`);
+    checkWinner(); // remaining players may all have finished
+    save(); render();
   }
 
   const breakTotal = () => state.breakBalls.reduce((a, v) => a + v, 0);
@@ -986,6 +1351,17 @@
     sfx.turn();
     toast(`${state.players[state.current].name} to the table`);
     save(); render();
+    if (!ui.sheet) scrollToCurrent();
+  }
+
+  // Keep the player at the table visible in long lists.
+  function scrollToCurrent() {
+    if (!state) return;
+    const row = document.querySelectorAll("#players .prow")[state.current];
+    if (row && row.scrollIntoView) {
+      const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      try { row.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" }); } catch (_) { row.scrollIntoView(false); }
+    }
   }
 
   // Give player i the table (closing the current break) without opening anything.
@@ -1017,6 +1393,7 @@
     ui.sheet = false;
     ui.editingName = null;
     render();
+    scrollToCurrent(); // the turn may have moved on while the pop-up was open
     const back = state && document.querySelector(`[data-fk="score-${state.current}"]`);
     if (back) back.focus({ preventScroll: true });
   }
@@ -1056,9 +1433,13 @@
     if (state.finished.length === state.players.length) finish(state.finished[0], "target");
   }
 
-  function endGame() {
+  async function endGame() {
     if (!state) return;
-    if (!confirm("End the game?\n\nThe final scores will be shown, then ALL players' data (names, scores, history, wins) will be cleared.")) return;
+    const okGo = await askConfirm({
+      title: "End the game?", icon: "🏁", confirmText: "End game", danger: true,
+      message: "The final standings will be shown, then ALL players' data (names, scores, history and wins) will be cleared.",
+    });
+    if (!okGo || !state) return;
     // Freeze a copy of the final standings for the results window.
     const final = JSON.parse(JSON.stringify(state));
     if (!final.ended) {
@@ -1107,6 +1488,20 @@
     const b = BALL_BY_VALUE[v];
     return el("span", { class: `mini-ball ${b ? b.cls : "foul-ball"}`, title: b ? `${b.name} (${v})` : `Foul (${v})` });
   };
+  // Small line icons drawn as SVG so they look the same on every phone (emoji/symbol fonts vary).
+  const ICONS = {
+    reset: ["M3 12a9 9 0 1 0 3-6.7", "M3 4v5h5"],
+    trash: ["M4 7h16", "M9 7V4h6v3", "M6 7l1 13h10l1-13", "M10 11v6", "M14 11v6"],
+  };
+  function icon(name) {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    [["viewBox", "0 0 24 24"], ["width", "14"], ["height", "14"], ["fill", "none"], ["stroke", "currentColor"],
+     ["stroke-width", "2.4"], ["stroke-linecap", "round"], ["stroke-linejoin", "round"], ["aria-hidden", "true"], ["class", "ic"]]
+      .forEach(([k, v]) => svg.setAttribute(k, v));
+    ICONS[name].forEach(dPath => { const p = document.createElementNS(ns, "path"); p.setAttribute("d", dPath); svg.appendChild(p); });
+    return svg;
+  }
   const foulBall = v => el("span", { class: "mini-ball foul-ball", title: `Foul (${v})` });
   const dot = color => el("span", { class: "dot", style: `background:${color}`, "aria-hidden": "true" });
   const leaderIdx = () => {
@@ -1171,7 +1566,16 @@
         "aria-label": `Foul: take ${v} points from ${p.name}`,
         onclick: () => foul(v),
       }))),
-      el("button", { type: "button", class: "turn-btn big", "data-fk": "sheet-end-turn", style: "margin-top:0.9rem", text: `⏭ End turn → ${next.name}`, onclick: endTurn }),
+      // Next player: hands the table on and keeps scoring open for them (finished players are skipped)
+      el("button", {
+        type: "button", class: "next-btn", "data-fk": "sheet-next",
+        disabled: nextPlayerIndex() === state.current,
+        "aria-label": `Next player: ${next.name}`,
+        onclick: endTurn,
+      }, [
+        el("span", { class: "next-lbl", text: "Next player" }),
+        el("span", { class: "next-who" }, [el("span", { class: "dot", style: `background:${next.color}`, "aria-hidden": "true" }), next.name, " ▶"]),
+      ]),
     ]);
   }
 
@@ -1187,16 +1591,7 @@
     av.textContent = initials(p.name);
     av.style.background = p.color;
     av.style.color = fg;
-    av.setAttribute("aria-label", `Change ${p.name}'s colour`);
     $("sh-name").textContent = p.name;
-    $("sh-edit").setAttribute("aria-label", `Edit ${p.name}'s name`);
-    $("sh-up").setAttribute("aria-label", `Add 1 point to ${p.name}`);
-    $("sh-down").setAttribute("aria-label", `Take 1 point from ${p.name}`);
-    // Inline name editing
-    if (ui.editingName !== null && ui.editingName !== i) ui.editingName = null; // turn moved on
-    const editing = ui.editingName === i;
-    $("sh-name-line").classList.toggle("hidden", editing);
-    $("sh-name-form").classList.toggle("hidden", !editing);
     $("sh-meta").textContent = breakTotal() > 0 ? `Break ${breakTotal()}` : "";
     const sc = $("sh-score");
     sc.textContent = String(p.score);
@@ -1215,6 +1610,10 @@
   function renderPlayers() {
     const wrap = $("players");
     wrap.innerHTML = "";
+    // More than 4 players: one-line rows so most of the list fits without scrolling.
+    const compact = state.players.length > 4;
+    wrap.classList.toggle("compact", compact);
+    $("players-hint").classList.toggle("hidden", compact);
     const lead = leaderIdx();
     state.players.forEach((p, i) => {
       const isCur = i === state.current && !state.ended;
@@ -1228,45 +1627,66 @@
         onclick: e => { e.stopPropagation(); selectPlayer(i); },
       });
 
-      // ▲ points ▼ in the centre of the row
+      // Row layout:  [colour] NAME ✎   |   ● AT THE TABLE / Need 100 to go   |   ▼ score ▲
+      const place = placeOf(i);
+
+      // Right: ▼ score ▲
       const mid = el("div", { class: "pmid" }, [
-        el("button", {
-          type: "button", class: "arrow up", "data-fk": `up-${i}`, text: "▲",
-          "aria-label": `Add 1 point to ${p.name}`, disabled: state.ended,
-          onclick: e => { e.stopPropagation(); adjust(i, 1); },
-        }),
-        scoreEl,
         el("button", {
           type: "button", class: "arrow down", "data-fk": `down-${i}`, text: "▼",
           "aria-label": `Take 1 point from ${p.name}`, disabled: state.ended,
           onclick: e => { e.stopPropagation(); adjust(i, -1); },
         }),
+        scoreEl,
+        el("button", {
+          type: "button", class: "arrow up", "data-fk": `up-${i}`, text: "▲",
+          "aria-label": `Add 1 point to ${p.name}`, disabled: state.ended,
+          onclick: e => { e.stopPropagation(); adjust(i, 1); },
+        }),
       ]);
 
-      const head = el("div", { class: "prow-head", onclick: () => selectPlayer(i) }, [
-        el("div", { class: "pleft" }, [
-          el("button", {
-            type: "button", class: "avatar", "data-fk": `avatar-${i}`,
-            style: `background:${p.color};color:${fg}`, text: initials(p.name),
-            "aria-haspopup": "dialog", "aria-label": `Change ${p.name}'s colour`, title: "Change colour",
-            onclick: e => { e.stopPropagation(); openPlayerColorPicker(i, `avatar-${i}`); },
-          }),
-          el("div", { class: "pinfo" }, [
-            el("button", {
-              type: "button", class: "pname", "data-fk": `name-${i}`,
-              "aria-label": `${p.name}: edit details and view points history`,
-              onclick: e => { e.stopPropagation(); openPlayerDialog(i); },
-            }, [(i === lead ? "👑 " : "") + p.name]),
-            el("div", { class: "pmeta", text: placeOf(i) >= 0 ? `Target reached` : `${Math.max(0, state.target - p.score)} to go` }),
-            placeOf(i) >= 0
-              ? el("span", { class: "badge done-badge", text: `${["🥇", "🥈", "🥉"][placeOf(i)] || "🏁"} ${ordinal(placeOf(i) + 1).toUpperCase()} · FINISHED` })
-              : null,
-            isCur ? el("span", { class: "badge", style: `background:${p.color};color:${fg}`, text: "● AT THE TABLE" }) : null,
-          ]),
+      // Centre: status badge, then "Need N to go" in small text
+      // The badge slot is always there (empty if not at the table) so "Need N to go" never moves.
+      const centre = el("div", { class: "pcenter" }, [
+        el("div", { class: "pslot" }, [
+          isCur ? el("span", { class: "badge", style: `background:${p.color};color:${fg}`, text: "AT THE TABLE" }) : null,
         ]),
-        mid,
-        el("div", { "aria-hidden": "true" }), // right spacer keeps points centred
+        el("div", { class: "pneed", text: place >= 0 ? "Target reached" : `Need ${Math.max(0, state.target - p.score)} to go` }),
       ]);
+
+      // Between "Need N to go" and ▼: reset this player's score / delete this player (stacked)
+      const acts = el("div", { class: "pacts" }, [
+        el("button", {
+          type: "button", class: "pact", "data-fk": `reset-${i}`,
+          "aria-label": `Reset ${p.name}'s score to 0`, title: "Reset score to 0",
+          disabled: state.ended || p.score === 0,
+          onclick: e => { e.stopPropagation(); resetPlayerScore(i); },
+        }, [icon("reset")]),
+        el("button", {
+          type: "button", class: "pact del", "data-fk": `delete-${i}`,
+          "aria-label": `Delete ${p.name}`, title: "Delete player",
+          disabled: state.ended || state.players.length <= MIN_PLAYERS,
+          onclick: e => { e.stopPropagation(); deletePlayer(i); },
+        }, [icon("trash")]),
+      ]);
+
+      // Left: player logo (display only) + name (tap to edit name / colour / see history)
+      const left = el("div", { class: "pleft" }, [
+        el("div", {
+          class: "avatar", style: `background:${p.color};color:${fg}`, text: initials(p.name), "aria-hidden": "true",
+        }),
+        el("button", {
+          type: "button", class: "pname", "data-fk": `name-${i}`,
+          "aria-haspopup": "dialog", "aria-label": `${p.name}: edit and view points history`, title: "Edit / history",
+          onclick: e => { e.stopPropagation(); openPlayerDialog(i); },
+        }, [p.name]),
+        // Winner icon after the name: finishing medal, otherwise 👑 for the current leader
+        place >= 0
+          ? el("span", { class: "pwin", text: ["🥇", "🥈", "🥉"][place] || "🏁", title: `Finished ${ordinal(place + 1)}`, "aria-label": `Finished ${ordinal(place + 1)}` })
+          : i === lead ? el("span", { class: "pwin", text: "👑", title: "Leader", "aria-label": "Leader" }) : null,
+      ]);
+
+      const head = el("div", { class: "prow-head", onclick: () => selectPlayer(i) }, [left, centre, acts, mid]);
 
       const row = el("article", { class: "prow" + (isCur ? " active" : "") + (placeOf(i) >= 0 ? " done" : ""), style: `--pc:${p.color}`, "aria-label": `${p.name}, ${p.score} points` }, [
         head,
@@ -1292,6 +1712,10 @@
       } else if (e.type === "penalty") {
         how = el("td", {}, [foulBall(e.value), " ", el("span", { class: "tag foul-tag", text: `FOUL ${e.value}` })]);
         ptsCls = "pts-minus"; ptsText = `−${e.value}`;
+      } else if (e.type === "reset") {
+        how = el("td", {}, [el("span", { class: "tag adj-tag", text: "↺ RESET" }), " to 0"]);
+        ptsCls = e.value > 0 ? "pts-minus" : "pts-plus";
+        ptsText = e.value > 0 ? `−${e.value}` : `+${-e.value}`;
       } else if (e.type === "adjust") {
         const up = e.value > 0;
         how = el("td", {}, [el("span", { class: "tag adj-tag", text: up ? "▲ +1" : "▼ −1" }), " Manual"]);
@@ -1435,32 +1859,14 @@
   }
 
   function playerHistory(idx) {
-    const p = state.players[idx];
+    // Player history: balls potted + list of every point (stat boxes and chart removed).
     const mine = state.log.filter(e => e.player === idx);
-    const sum = arr => arr.reduce((a, e) => a + e.value, 0);
-    const potPts = sum(mine.filter(e => e.type === "pot"));
-    const foulRecv = sum(mine.filter(e => e.type === "foul"));
-    const manual = sum(mine.filter(e => e.type === "adjust")); // signed: ▲ +1 / ▼ −1
-    const committed = state.log.filter(e => e.type === "foul" && e.by === idx);
-    const penalties = sum(mine.filter(e => e.type === "penalty"));
-    const stat = (v, k) => el("div", { class: "stat" }, [el("div", { class: "v", text: String(v) }), el("div", { class: "k", text: k })]);
     const chips = BALLS.map(b => {
       const count = mine.filter(e => e.type === "pot" && e.value === b.value).length;
       return el("span", { class: "chip" }, [miniBall(b.value), `${b.name} × ${count}`]);
     });
     return el("div", {}, [
-      el("div", { class: "stats" }, [
-        stat(p.score, "Total points"),
-        stat(potPts, "From pots"),
-        stat(foulRecv, "From fouls"),
-        stat(manual > 0 ? `+${manual}` : manual < 0 ? `−${-manual}` : 0, "▲▼ Manual"),
-        stat(committed.length, `Fouls given (${sum(committed)} pts)`),
-        stat(penalties ? `−${penalties}` : 0, `Foul points lost (${mine.filter(e => e.type === "penalty").length} fouls)`),
-        stat(p.highBreak, "High break"),
-      ]),
       el("div", { class: "chips" }, chips),
-      el("div", { class: "muted small", text: "Score progression (dashed line = target)" }),
-      sparkline(mine.map(e => e.after), p.color),
       logTable(mine, false),
     ]);
   }
@@ -1582,7 +1988,7 @@
     const show = state.ended && ui.modalOpen;
     $("winner").classList.toggle("hidden", !show);
     $("gameover-banner").classList.toggle("hidden", !state.ended);
-    document.body.classList.toggle("lock", show || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || (ui.sheet && !state.ended));
+    document.body.classList.toggle("lock", show || !!askResolve || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || (ui.sheet && !state.ended));
     if (!state.ended) return;
     paintResults(state);
     $("play-again").textContent = "Play again";
@@ -1715,7 +2121,7 @@
     b.textContent = dark ? "☀️" : "🌙";
     b.setAttribute("aria-pressed", String(dark));
     b.title = dark ? "Switch to light theme" : "Switch to dark theme";
-    $("theme-color").setAttribute("content", dark ? "#0f6040" : "#11764c");
+    $("theme-color").setAttribute("content", dark ? "#125238" : "#136345");
   }
   $("theme-toggle").addEventListener("click", () => {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
@@ -1764,8 +2170,12 @@
     "reset-points": resetPoints,
     "history": () => openHistory("all"),
     "end-game": endGame,
-    "change-players": () => {
-      if (!confirm("Change players? All scores, wins and history will be cleared.")) return;
+    "change-players": async () => {
+      const okGo = await askConfirm({
+        title: "Change players?", icon: "👥", confirmText: "Change players", danger: true,
+        message: "This ends the current game and goes back to setup. Names and colours are kept; all scores, wins and history are cleared.",
+      });
+      if (!okGo || !state) return;
       setup = { players: state.players.map(p => ({ name: p.name, color: p.color })), target: state.target };
       state = null; undoStack = [];
       try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
@@ -1803,41 +2213,7 @@
   });
 
   // ================= Dialog & results controls =================
-  // Scoring pop-up: colour ball + name editing
-  $("sh-avatar").addEventListener("click", () => openPlayerColorPicker(state.current, null));
-  // ▲ / ▼ for the selected player inside the pop-up
-  $("sh-up").addEventListener("click", () => adjust(state.current, 1));
-  $("sh-down").addEventListener("click", () => adjust(state.current, -1));
-  function startNameEdit() {
-    ui.editingName = state.current;
-    render();
-    const inp = $("sh-name-input");
-    inp.value = state.players[state.current].name;
-    inp.focus();
-    inp.select();
-  }
-  function cancelNameEdit() {
-    ui.editingName = null;
-    render();
-    $("sh-edit").focus({ preventScroll: true });
-  }
-  $("sh-edit").addEventListener("click", startNameEdit);
-  $("sh-name-cancel").addEventListener("click", cancelNameEdit);
-  $("sh-name-form").addEventListener("submit", e => {
-    e.preventDefault();
-    const name = cleanName($("sh-name-input").value, "");
-    if (!name) { toast("Name can't be empty"); $("sh-name-input").focus(); return; }
-    const p = state.players[ui.editingName];
-    if (p && name !== p.name) {
-      snapshot();
-      p.name = name;
-      save();
-      toast("✔ Name updated");
-    }
-    ui.editingName = null;
-    render();
-    $("sh-edit").focus({ preventScroll: true });
-  });
+  // (Scoring pop-up is scoring-only; name/colour editing lives on the ✎ button of each row.)
 
   // History pop-up
   $("hist-close").addEventListener("click", closeHistory);
@@ -1874,6 +2250,10 @@
 
   // ================= Keyboard =================
   document.addEventListener("keydown", e => {
+    if (askResolve) {
+      if (e.key === "Escape") closeAsk(false);
+      return; // no shortcuts while a confirmation is open
+    }
     if (e.key === "Escape") {
       if (ui.cp !== null) return closeColorPicker();
       if (ui.addp !== null) return closeAddPlayer();
@@ -1881,7 +2261,6 @@
       if (ui.hist) return closeHistory();
       if (ui.dlg !== null) return closePlayerDialog();
       if (drawerOpen()) return closeDrawer();
-      if (ui.editingName !== null) return cancelNameEdit();
       if (ui.sheet) return closeSheet();
       if (ui.final) { ui.final = null; render(); return; }
       if (state && state.ended && ui.modalOpen) { ui.modalOpen = false; renderResults(); }
@@ -1947,8 +2326,9 @@
     };
     const rows = [["#", "Time", "Player", "Type", "Detail", "Points", "Score after"]];
     state.log.forEach(e => {
-      const detail = e.type === "foul" ? `Foul by ${state.players[e.by].name}` : e.type === "penalty" ? `Foul ${e.value}` : e.type === "adjust" ? "Manual" : e.ball;
-      rows.push([e.n, new Date(e.time).toISOString(), state.players[e.player].name, e.type, detail, e.type === "penalty" ? -e.value : e.value, e.after]);
+      const detail = e.type === "foul" ? `Foul by ${state.players[e.by].name}` : e.type === "penalty" ? `Foul ${e.value}` : e.type === "adjust" ? "Manual" : e.type === "reset" ? "Reset to 0" : e.ball;
+      const pts = e.type === "penalty" || e.type === "reset" ? -e.value : e.value;
+      rows.push([e.n, new Date(e.time).toISOString(), state.players[e.player].name, e.type, detail, pts, e.after]);
     });
     const csv = rows.map(r => r.map(cell).join(",")).join("\r\n");
     shareOrDownload(`snooker-history-${stamp()}.csv`, csv, "text/csv");
@@ -2018,6 +2398,10 @@
         if (!FOULS.includes(e.value)) fail("bad penalty");
         return { n: e.n, time: e.time, type: "penalty", player: e.player, value: e.value, ball: "Foul", after: e.after };
       }
+      if (e.type === "reset") {
+        if (!isInt(e.value, -1e6, 1e6) || e.after !== 0) fail("bad reset");
+        return { n: e.n, time: e.time, type: "reset", player: e.player, value: e.value, ball: "Reset", after: 0 };
+      }
       if (e.type === "adjust") {
         if (e.value !== 1 && e.value !== -1) fail("bad adjust");
         return { n: e.n, time: e.time, type: "adjust", player: e.player, value: e.value, ball: "Manual", after: e.after };
@@ -2035,7 +2419,7 @@
     return { target: s.target, players, current: s.current, breakBalls, breaks, log, finished, winner: s.winner, ended: s.ended, endReason: s.endReason };
   }
 
-  function restoreFromText(text) {
+  async function restoreFromText(text) {
     let restored;
     try {
       const data = JSON.parse(text);
@@ -2044,7 +2428,13 @@
       toast("⚠️ That file isn't a valid Snooker Century backup");
       return false;
     }
-    if (state && !confirm("Replace the current game with this backup?")) return false;
+    if (state) {
+      const okGo = await askConfirm({
+        title: "Replace current game?", icon: "📂", confirmText: "Restore backup", danger: true,
+        message: "The game in progress will be replaced by the one in this backup file.",
+      });
+      if (!okGo) return false;
+    }
     state = restored;
     undoStack = [];
     Object.assign(ui, { sheet: false, hist: false, addp: null, dlg: null, bkp: false, editingName: null, modalOpen: false, gain: null, final: null });
