@@ -1,6 +1,6 @@
 // Offline support for The Snooker Century Game.
 // Bump CACHE when files change so phones pick up the new version.
-const CACHE = "snooker-century-v21";
+const CACHE = "snooker-century-v23";
 const ASSETS = [
   "./",
   "./index.html",

@@ -829,50 +829,70 @@
        --kt  tall two-line cards (2–3 players)
        --rowh target row height, --rgap gap between rows
      ===================================================================== */
-  #players {
-    --av: 46px; --fn: 1.15rem; --fw: 1.05rem; --fs: 2.1rem; --arw: 44px; --arh: 44px;
-    --pa: 32px; --pai: 15px; --fneed: 0.78rem; --fb: 0.72rem;
-    --kx: 1; --kt: 1; --rowh: 0px; --rgap: 0.75rem;
-  }
-  @media (max-width: 560px) {
-    #players { --av: 32px; --fn: 0.86rem; --fw: 0.8rem; --fs: 1.38rem; --arw: 27px; --arh: 34px; --pa: 23px; --pai: 12px; --fneed: 0.62rem; --fb: 0.5rem; }
-  }
-  @media (max-width: 400px) {
-    #players { --av: 25px; --fn: 0.8rem; --fw: 0.72rem; --fs: 1.22rem; --arw: 24px; --arh: 32px; --pa: 20px; --pai: 11px; --fneed: 0.58rem; --fb: 0.46rem; }
-  }
+  /* Base sizes at --k = 1 for each row style. fitRows() sets --k (scale), --rowh and --rgap. */
+  #players { --k: 1; --rowh: 0px; --rgap: 0.75rem; }
   #players .prow {
     min-height: var(--rowh); margin-bottom: var(--rgap);
     display: flex; flex-direction: column; justify-content: center;
-    transition: min-height 0.2s ease;
+    /* no min-height transition: fitRows() must measure the row's real size instantly */
   }
-  #players .prow-head { padding-top: calc(0.45rem * var(--kx)); padding-bottom: calc(0.35rem * var(--kx)); }
-  #players .pleft .avatar { width: calc(var(--av) * var(--kx)); height: calc(var(--av) * var(--kx)); font-size: calc(var(--av) * 0.36 * var(--kx)); }
-  #players .pname, #players button.pname { font-size: calc(var(--fn) * var(--kx)); }
-  #players .pwin { font-size: calc(var(--fw) * var(--kx)); }
-  #players .pcenter .badge { font-size: calc(var(--fb) * var(--kx)); }
-  #players .pslot { height: calc(var(--fb) * 1.7 * var(--kx)); }
-  #players .pneed { font-size: calc(var(--fneed) * var(--kx)); }
-  #players .pact { width: calc(var(--pa) * var(--kx)); height: calc(var(--pa) * var(--kx)); }
-  #players .pact .ic { width: calc(var(--pai) * var(--kx)); height: calc(var(--pai) * var(--kx)); }
-  #players .arrow { width: calc(var(--arw) * var(--kx)); min-height: calc(var(--arh) * var(--kx)); font-size: calc(var(--arw) * 0.38 * var(--kx)); }
-  #players .pscore { font-size: calc(var(--fs) * var(--kx)); }
-
   /* Extra row height: centre the row's content, progress bar stays at the bottom */
-  #players .prow-head { flex: 1 1 auto; }
-  #players .progress { height: calc(5px * var(--kx)); margin: 0 0.6rem calc(0.45rem * var(--kx)); }
+  #players .prow-head { flex: 1 1 auto; align-content: center; }
+  #players .pacts { display: none; } /* reset / delete live in the player window now */
 
-  /* Big three-line cards for 2–3 players:
-       [logo] NAME 👑                       ↺ 🗑
-       AT THE TABLE · Need 72 to go
-       ▼               28               ▲        */
-  #players.tall .prow-head {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "left acts" "centre centre" "score score";
-    row-gap: calc(0.6rem * var(--kt)); column-gap: 0.75rem;
-    padding: calc(0.75rem * var(--kt)) 0.85rem calc(0.6rem * var(--kt));
+  /* ---- ROW: one line per player (7+ players on a phone) ----
+       [logo] NAME 👑   AT THE TABLE / Need 72 to go   ▼ 28 ▲ */
+  #players.row1 .prow-head {
+    grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) auto; grid-template-areas: none;
+    gap: calc(0.4rem * var(--k)); padding: calc(0.4rem * var(--k)) 0.55rem calc(0.3rem * var(--k));
   }
-  #players.tall .pleft { grid-area: left; }
-  #players.tall .pacts { grid-area: acts; }
+  #players.row1 .pleft { gap: calc(0.4rem * var(--k)); }
+  #players.row1 .pleft .avatar { width: calc(34px * var(--k)); height: calc(34px * var(--k)); font-size: calc(12px * var(--k)); }
+  #players.row1 .pname, #players.row1 button.pname { font-size: calc(1rem * var(--k)); }
+  #players.row1 .pwin { font-size: calc(0.82rem * var(--k)); }
+  #players.row1 .pcenter .badge { font-size: calc(0.56rem * var(--k)); padding: 0.1rem 0.35rem; }
+  #players.row1 .pslot { height: calc(0.95rem * var(--k)); }
+  #players.row1 .pneed { font-size: calc(0.86rem * var(--k)); white-space: nowrap; line-height: 1.15; }
+  #players.row1 .arrow { width: calc(34px * var(--k)); min-height: calc(38px * var(--k)); font-size: calc(13px * var(--k)); }
+  #players.row1 .pscore { font-size: calc(1.6rem * var(--k)); width: 3ch; min-width: 3ch; }
+  #players.row1 .pmid { gap: calc(0.25rem * var(--k)); }
+  #players.row1 .progress { height: calc(5px * var(--k)); margin: 0 0.6rem calc(0.4rem * var(--k)); }
+
+  /* ---- DUO: two lines per player (about 4–6 players on a phone) ----
+       [logo] NAME 👑                 AT THE TABLE
+       Need 72 to go                  ▼  28  ▲      */
+  #players.duo .prow-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "left badge" "need score";
+    column-gap: 0.6rem; row-gap: calc(0.35rem * var(--k));
+    padding: calc(0.55rem * var(--k)) 0.75rem calc(0.45rem * var(--k));
+  }
+  #players.duo .pcenter { display: contents; } /* its badge + need become grid cells */
+  #players.duo .pleft { grid-area: left; gap: calc(0.5rem * var(--k)); }
+  #players.duo .pslot { grid-area: badge; height: auto; justify-self: end; }
+  #players.duo .pneed { grid-area: need; justify-self: start; align-self: center; text-align: left; white-space: nowrap; }
+  #players.duo .pmid { grid-area: score; justify-self: end; }
+  #players.duo .pleft .avatar { width: calc(40px * var(--k)); height: calc(40px * var(--k)); font-size: calc(14px * var(--k)); }
+  #players.duo .pname, #players.duo button.pname { font-size: calc(1.15rem * var(--k)); }
+  #players.duo .pwin { font-size: calc(1.05rem * var(--k)); }
+  #players.duo .pcenter .badge { font-size: calc(0.66rem * var(--k)); padding: 0.14rem 0.5rem; }
+  #players.duo .pneed { font-size: calc(0.92rem * var(--k)); }
+  #players.duo .arrow { width: calc(42px * var(--k)); min-height: calc(42px * var(--k)); font-size: calc(15px * var(--k)); }
+  #players.duo .pscore { font-size: calc(2.1rem * var(--k)); width: 3ch; min-width: 3ch; }
+  #players.duo .pmid { gap: calc(0.3rem * var(--k)); }
+  #players.duo .progress { height: calc(6px * var(--k)); margin: 0 0.75rem calc(0.5rem * var(--k)); }
+
+  /* ---- TALL: big three-line cards (2–3 players) ----
+       [logo] NAME 👑
+       AT THE TABLE · Need 72 to go
+       ▼               28               ▲   */
+  #players.tall .prow-head {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "left" "centre" "score";
+    row-gap: calc(0.6rem * var(--k));
+    padding: calc(0.75rem * var(--k)) 0.85rem calc(0.6rem * var(--k));
+  }
+  #players.tall .pleft { grid-area: left; gap: calc(0.55rem * var(--k)); }
   #players.tall .pcenter {
     grid-area: centre; flex-direction: row; align-items: center; justify-content: flex-start;
     gap: 0.5rem; text-align: left; justify-self: stretch; overflow: visible;
@@ -880,17 +900,34 @@
   #players.tall .pslot { height: auto; justify-content: flex-start; }
   #players.tall .pslot:empty { display: none; }
   #players.tall .pmid { grid-area: score; justify-content: space-between; justify-self: stretch; }
-  #players.tall .progress { height: calc(6px * var(--kt)); margin: 0 0.85rem calc(0.6rem * var(--kt)); }
-  #players.tall .pleft .avatar { width: calc(44px * var(--kt)); height: calc(44px * var(--kt)); font-size: calc(15px * var(--kt)); }
-  #players.tall .pname, #players.tall button.pname { font-size: calc(1.15rem * var(--kt)); }
-  #players.tall .pwin { font-size: calc(1.05rem * var(--kt)); }
-  #players.tall .pcenter .badge { font-size: calc(0.64rem * var(--kt)); padding: 0.12rem 0.5rem; }
-  #players.tall .pneed { font-size: calc(0.9rem * var(--kt)); white-space: nowrap; }
-  #players.tall .pact { width: calc(32px * var(--kt)); height: calc(32px * var(--kt)); }
-  #players.tall .pact .ic { width: calc(15px * var(--kt)); height: calc(15px * var(--kt)); }
-  #players.tall .arrow { width: calc(44px * var(--kt)); min-height: calc(44px * var(--kt)); font-size: calc(17px * var(--kt)); }
-  #players.tall .pscore { font-size: calc(2.6rem * var(--kt)); width: auto; min-width: 3ch; }
-  #players.tall .pmid { gap: calc(0.35rem * var(--kt)); }
+  #players.tall .pleft .avatar { width: calc(46px * var(--k)); height: calc(46px * var(--k)); font-size: calc(16px * var(--k)); }
+  #players.tall .pname, #players.tall button.pname { font-size: calc(1.3rem * var(--k)); }
+  #players.tall .pwin { font-size: calc(1.15rem * var(--k)); }
+  #players.tall .pcenter .badge { font-size: calc(0.72rem * var(--k)); padding: 0.14rem 0.55rem; }
+  #players.tall .pneed { font-size: calc(1rem * var(--k)); white-space: nowrap; }
+  #players.tall .arrow { width: calc(50px * var(--k)); min-height: calc(50px * var(--k)); font-size: calc(18px * var(--k)); }
+  #players.tall .pscore { font-size: calc(2.8rem * var(--k)); width: auto; min-width: 3ch; }
+  #players.tall .pmid { gap: calc(0.35rem * var(--k)); }
+  #players.tall .progress { height: calc(6px * var(--k)); margin: 0 0.85rem calc(0.6rem * var(--k)); }
+
+  /* "Need N to go": each part stays whole; one-line rows stack them as two neat lines */
+  #players .pneed .nw { white-space: nowrap; }
+  #players .pneed { white-space: nowrap; }
+
+  /* Badge text: short in one-line rows, full elsewhere */
+  #players .badge .b-short { display: none; }
+  #players.row1 .badge .b-long { display: none; }
+  #players.row1 .badge .b-short { display: inline; }
+
+  /* Slimmer two-line rows so ~6 players fit on an iPhone in this style */
+  #players.duo .prow-head { padding: calc(0.4rem * var(--k)) 0.7rem calc(0.3rem * var(--k)); row-gap: calc(0.2rem * var(--k)); }
+  #players.duo .pleft .avatar { width: calc(36px * var(--k)); height: calc(36px * var(--k)); }
+  #players.duo .arrow { min-height: calc(38px * var(--k)); }
+  #players.duo .progress { height: calc(5px * var(--k)); margin-bottom: calc(0.4rem * var(--k)); }
+
+  /* Player window: reset / delete */
+  .pd-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .pd-actions button { min-height: 50px; font-size: 1rem; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -1096,6 +1133,11 @@
     <div class="row" style="margin-top:0.9rem">
       <button type="button" class="primary" id="pd-save">Save changes</button>
     </div>
+    <h3>Player actions</h3>
+    <div class="pd-actions">
+      <button type="button" class="ghost" id="pd-reset">↺ Reset to 0</button>
+      <button type="button" class="danger" id="pd-delete">🗑 Delete player</button>
+    </div>
     <h3>Points history</h3>
     <div id="pd-history"></div>
   </div>
@@ -1132,7 +1174,7 @@
     { name: "Red", value: 21, cls: "red", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 21; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 23; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -1443,23 +1485,30 @@
     const avail = vh - top - padB;
     const target = Math.floor((avail - gap * (n - 1)) / n);
 
-    // Reset, then measure a row's natural height at normal size.
-    wrap.style.setProperty("--kx", "1");
-    wrap.style.setProperty("--kt", "1");
-    wrap.style.setProperty("--rowh", "0px");
     wrap.style.setProperty("--rgap", gap + "px");
-    const tall = target >= 170;
-    wrap.classList.toggle("tall", tall);
-    if (tall) {
-      // Big three-line cards; the full-width ▼ score ▲ bar sets how big they can get.
-      const ktMax = clamp((vw - 40) / 240, 1, 1.9);
-      wrap.style.setProperty("--kt", clamp(target / 175, 1, ktMax).toFixed(3));
-    } else {
+    wrap.style.setProperty("--rowh", "0px");
+
+    // Row styles, biggest first: tall (3 lines) → duo (2 lines) → row (1 line).
+    // Try the biggest that suits the space; if a row still doesn't fit, fall back to the next.
+    const LIMITS = {
+      //       width needed at k=1, smallest k allowed, largest k allowed
+      tall: { w: 250, min: 0.9, max: 1.9 },
+      duo:  { w: 345, min: 0.85, max: 1.9 },
+      row:  { w: 360, min: 0.78, max: 1.35 },
+    };
+    const order = target >= 175 ? ["tall", "duo", "row"] : target >= 95 ? ["duo", "row"] : ["row"];
+    for (const mode of order) {
+      wrap.classList.toggle("tall", mode === "tall");
+      wrap.classList.toggle("duo", mode === "duo");
+      wrap.classList.toggle("row1", mode === "row");
+      const L = LIMITS[mode];
+      wrap.style.setProperty("--k", "1");
       const natural = rows[0].offsetHeight || 60;
-      // Phones: rows stretch in height only (text keeps its size so names never get cut),
-      // or shrink a little to squeeze more players on. Wide screens may also grow the text.
-      const kxMax = vw <= 560 ? 1 : clamp(1 + (vw - 560) / 800, 1, 1.3);
-      wrap.style.setProperty("--kx", clamp(target / natural, 0.78, kxMax).toFixed(3));
+      // Grow to fill the height, but never wider than the screen (k < 1 on narrow phones).
+      const widthLimit = (vw - 32) / L.w;
+      const k = clamp(Math.min(target / natural, widthLimit, L.max), Math.min(L.min, widthLimit), 1.9);
+      wrap.style.setProperty("--k", k.toFixed(3));
+      if (mode === "row" || (rows[0].offsetHeight || 0) <= target + 1) break; // fits → keep this style
     }
     wrap.style.setProperty("--rowh", Math.max(0, target) + "px");
   }
@@ -1769,13 +1818,9 @@
         }),
       ]);
 
-      // Centre: status badge, then "Need N to go" in small text
-      // The badge slot is always there (empty if not at the table) so "Need N to go" never moves.
+      // Status: just "Need N" (no "AT THE TABLE" badge — the highlighted row shows who's at the table).
       const centre = el("div", { class: "pcenter" }, [
-        el("div", { class: "pslot" }, [
-          isCur ? el("span", { class: "badge", style: `background:${p.color};color:${fg}`, text: "AT THE TABLE" }) : null,
-        ]),
-        el("div", { class: "pneed", text: place >= 0 ? "Target reached" : `Need ${Math.max(0, state.target - p.score)} to go` }),
+        el("div", { class: "pneed", text: place >= 0 ? "Done" : `Need ${Math.max(0, state.target - p.score)}` }),
       ]);
 
       // Between "Need N to go" and ▼: reset this player's score / delete this player (stacked)
@@ -1810,7 +1855,9 @@
           : i === lead ? el("span", { class: "pwin", text: "👑", title: "Leader", "aria-label": "Leader" }) : null,
       ]);
 
-      const head = el("div", { class: "prow-head", onclick: () => selectPlayer(i) }, [left, centre, acts, mid]);
+      // Reset / delete now live in the player window (tap the name), so rows have room for bigger text.
+      void acts;
+      const head = el("div", { class: "prow-head", onclick: () => selectPlayer(i) }, [left, centre, mid]);
 
       const row = el("article", { class: "prow" + (isCur ? " active" : "") + (placeOf(i) >= 0 ? " done" : ""), style: `--pc:${p.color}`, "aria-label": `${p.name}, ${p.score} points` }, [
         head,
@@ -2082,6 +2129,9 @@
     const h = $("pd-history");
     h.innerHTML = "";
     h.appendChild(playerHistory(i));
+    $("pd-reset").disabled = state.ended || p.score === 0;
+    $("pd-delete").disabled = state.ended || state.players.length <= MIN_PLAYERS;
+    $("pd-delete").title = state.players.length <= MIN_PLAYERS ? `A game needs at least ${MIN_PLAYERS} players` : "";
     $("pdialog").classList.remove("hidden");
     document.body.classList.add("lock");
     setTimeout(() => $("pd-close").focus(), 30);
@@ -2363,6 +2413,9 @@
   $("sheet").addEventListener("click", e => { if (e.target.id === "sheet") closeSheet(); });
   $("pd-close").addEventListener("click", closePlayerDialog);
   $("pd-save").addEventListener("click", savePlayerDialog);
+  // Reset / delete from the player window (themed confirmation follows)
+  $("pd-reset").addEventListener("click", () => { const i = ui.dlg; closePlayerDialog(); resetPlayerScore(i); });
+  $("pd-delete").addEventListener("click", () => { const i = ui.dlg; closePlayerDialog(); deletePlayer(i); });
   $("pd-name").addEventListener("keydown", e => { if (e.key === "Enter") savePlayerDialog(); });
   $("pdialog").addEventListener("click", e => { if (e.target.id === "pdialog") closePlayerDialog(); });
   $("play-again").addEventListener("click", () => {
