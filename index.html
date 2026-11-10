@@ -929,6 +929,130 @@
   .pd-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
   .pd-actions button { min-height: 50px; font-size: 1rem; }
 
+  /* =====================================================================
+     PLAYER CARD (current layout) — everything scales with --k from fitRows()
+       cards:  [↺]       NAME 🥇       [✎]
+               [−]     28 / Need 72     [+]
+       lines:  [↺] NAME 🥇 [✎]   [−] 28/Need 72 [+]   (many players)
+     ===================================================================== */
+  #players .pc {
+    flex: 1 1 auto; display: grid; align-items: center; cursor: pointer;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "reset title edit" "line line line";
+    column-gap: calc(0.55rem * var(--kt)); row-gap: calc(0.3rem * var(--k));
+    padding: calc(0.55rem * var(--k)) calc(0.7rem * var(--kt)) calc(0.35rem * var(--k));
+  }
+  #players.lines .pc {
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
+    grid-template-areas: "reset title edit minus mid plus";
+    column-gap: calc(0.4rem * var(--k)); row-gap: 0;
+    padding: calc(0.3rem * var(--k)) calc(0.5rem * var(--k)) calc(0.2rem * var(--k));
+  }
+  /* Score line: its own row in cards; its items join the single row in lines */
+  #players .pc-line {
+    grid-area: line; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center;
+    column-gap: calc(0.55rem * var(--k)); grid-template-areas: "minus mid plus";
+  }
+  #players.lines .pc-line { display: contents; }
+  #players .prow.active .pc { background: linear-gradient(90deg, color-mix(in srgb, var(--pc) 14%, transparent), transparent 80%); }
+
+  /* ↺ and ✎ — same size, white icon on dark tile */
+  /* Top line (↺ NAME ✎) grows less than the score line so long names always fit */
+  #players { --kt: min(var(--k), 1.25); }
+  #players .pc-icon {
+    width: calc(38px * var(--kt)); height: calc(38px * var(--kt)); min-height: 0; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; border-radius: calc(10px * var(--kt));
+    background: #2c3a33; border: 1px solid rgba(255, 255, 255, 0.1); color: #fff;
+  }
+  [data-theme="dark"] #players .pc-icon { background: #1d2e25; border-color: #2f463a; }
+  #players .pc-icon .ic { width: calc(18px * var(--kt)); height: calc(18px * var(--kt)); }
+  #players .pc-icon:disabled { opacity: 0.35; }
+  #players .pc-reset { grid-area: reset; justify-self: start; }
+  #players .pc-edit { grid-area: edit; justify-self: end; }
+  #players.lines .pc-icon { width: calc(32px * var(--k)); height: calc(32px * var(--k)); }
+  #players.lines .pc-icon .ic { width: calc(15px * var(--k)); height: calc(15px * var(--k)); }
+
+  /* Name (tap = rename) with winner icon after it */
+  #players .pc-title { grid-area: title; display: flex; align-items: center; justify-content: center; gap: calc(0.35rem * var(--k)); min-width: 0; }
+  #players.lines .pc-title { justify-content: flex-start; }
+  #players .pc-name {
+    min-width: 0; min-height: 0; padding: 0 0 1px; background: none; border: none; border-radius: 0; box-shadow: none;
+    color: var(--text); font-weight: 900; letter-spacing: 0.01em; font-size: calc(1.15rem * var(--kt)); line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: calc(3px * var(--kt)) solid var(--pc); cursor: pointer;
+  }
+  #players.lines .pc-name { font-size: calc(1rem * var(--k)); }
+  #players .pc-name:active { transform: none; opacity: 0.7; }
+  #players .pc-title .pwin { flex: none; font-size: calc(1.05rem * var(--kt)); line-height: 1; }
+  #players.lines .pc-title .pwin { font-size: calc(0.9rem * var(--k)); }
+
+  /* − and + */
+  #players .pc-step {
+    width: calc(50px * var(--k)); height: calc(50px * var(--k)); min-height: 0; padding: 0;
+    border-radius: calc(13px * var(--k)); font-size: calc(30px * var(--k)); font-weight: 900; line-height: 1;
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+  #players .pc-step.minus { grid-area: minus; justify-self: start; color: var(--minus); }
+  #players .pc-step.plus { grid-area: plus; justify-self: end; color: var(--plus); }
+  #players.lines .pc-step { width: calc(36px * var(--k)); height: calc(38px * var(--k)); font-size: calc(22px * var(--k)); border-radius: calc(10px * var(--k)); }
+
+  /* Score in the middle, "Need N" small underneath */
+  #players .pc-mid { grid-area: mid; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; }
+  #players .pc-pts {
+    min-height: 0; padding: 0; background: none; border: none; box-shadow: none; color: var(--text);
+    font-size: calc(2.5rem * var(--k)); font-weight: 900; line-height: 1; min-width: 3ch; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  #players .pc-pts:disabled { opacity: 1; cursor: default; }
+  #players .pc-pts.bump { animation: bump 0.4s ease-out; }
+  #players .prow.done .pc-pts { color: var(--gold); }
+  #players .pc-need { font-size: calc(0.8rem * var(--k)); font-weight: 700; color: var(--muted); white-space: nowrap; margin-top: calc(0.15rem * var(--k)); }
+  #players.lines .pc-pts { font-size: calc(1.6rem * var(--k)); }
+  #players.lines .pc-need { font-size: calc(0.62rem * var(--k)); margin-top: 0; }
+  #players .pc-mid .float-pts { left: 100%; right: auto; top: -0.2em; font-size: calc(1.4rem * var(--k)); }
+
+  #players.cards .progress, #players.lines .progress { height: calc(5px * var(--k)); margin: 0 calc(0.7rem * var(--k)) calc(0.45rem * var(--k)); }
+
+  /* ---------- Top bar: Add player + History ---------- */
+  .tb-actions { display: flex; gap: 0.4rem; flex: none; }
+  .topbar .tb-btn {
+    width: auto; min-width: 44px; height: 44px; padding: 0 0.85rem; border-radius: 22px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 800;
+  }
+  .topbar .tb-btn .ic { width: 18px; height: 18px; }
+  .topbar .tb-btn:disabled { opacity: 0.4; }
+  @media (max-width: 600px) {
+    .topbar .tb-btn { width: 44px; padding: 0; border-radius: 50%; }
+    .topbar .tb-lbl { display: none; }
+    .topbar .tb-ball { display: none; }
+    .topbar { gap: 0.4rem; }
+    .topbar h1 { font-size: 1.08rem; }
+    .topbar .sub { font-size: 0.72rem; }
+  }
+  @media (max-width: 370px) {
+    .topbar .tb-btn, .topbar .icon-btn { width: 40px; min-width: 40px; height: 40px; }
+    .topbar h1 { font-size: 0.98rem; }
+  }
+
+  /* ---------- Rename pop-up ---------- */
+  #ren { z-index: 13; }
+  .ren-modal { max-width: 420px; }
+  #ren-name { text-transform: uppercase; font-size: 1.15rem; }
+
+  /* ---------- History → Past games ---------- */
+  .past-list { display: flex; flex-direction: column; gap: 0.7rem; }
+  .past-card { background: var(--surface); border: 1px solid var(--hair, var(--border)); border-radius: 14px; padding: 0.75rem 0.85rem; box-shadow: var(--shadow); }
+  .past-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
+  .past-status { font-size: 0.7rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+  .past-status.ok { background: color-mix(in srgb, var(--gold) 20%, transparent); color: var(--gold); }
+  .past-winner { font-weight: 900; color: var(--gold); margin-bottom: 0.3rem; }
+  .past-standings { display: flex; flex-direction: column; gap: 0.15rem; }
+  .past-row { display: grid; grid-template-columns: 2rem auto minmax(0, 1fr) auto; align-items: center; gap: 0.25rem; font-weight: 800; }
+  .past-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .past-score { font-variant-numeric: tabular-nums; font-weight: 900; }
+  .past-log { margin-top: 0.5rem; }
+  .past-log summary { cursor: pointer; font-weight: 800; color: var(--gold); padding: 0.25rem 0; }
+  .past-clear { margin-top: 0.9rem; width: 100%; }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     .float-pts, .confetti { display: none; }
@@ -944,8 +1068,13 @@
 <header class="topbar">
   <button type="button" class="icon-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">☰</button>
   <div class="title">
-    <h1>🎱 Snooker Century</h1>
+    <h1><span class="tb-ball" aria-hidden="true">🎱 </span>Snooker Century</h1>
     <div class="sub" id="subtitle">Set up your game</div>
+  </div>
+  <!-- Quick actions (icons are added by script so they match on every phone) -->
+  <div class="tb-actions">
+    <button type="button" class="icon-btn tb-btn" id="tb-add" aria-label="Add player" title="Add player"><span class="tb-lbl">Add player</span></button>
+    <button type="button" class="icon-btn tb-btn" id="tb-hist" aria-label="History" title="History"><span class="tb-lbl">History</span></button>
   </div>
   <button type="button" class="icon-btn" id="theme-toggle" aria-label="Dark theme" aria-pressed="false">🌙</button>
 </header>
@@ -983,7 +1112,7 @@
       </div>
     </div>
 
-    <p class="muted small" id="players-hint" style="margin:0 0 0.6rem">Tap a player to score. Tap a name to edit or see history.</p>
+    <p class="muted small" id="players-hint" style="margin:0 0 0.6rem">Tap a player to score · tap a name to rename · ✎ to edit.</p>
     <div id="players"></div>
   </section>
 </main>
@@ -1000,14 +1129,9 @@
   <button type="button" class="item primary" data-act="end-turn"><span class="ico">⏭</span><span class="lbl">End turn</span></button>
   <button type="button" class="item" data-act="undo"><span class="ico">↶</span><span class="lbl">Undo</span></button>
 
-  <!-- Players -->
-  <div class="menu-section">Players</div>
-  <button type="button" class="item" data-act="add-player"><span class="ico">➕</span><span class="lbl">Add player</span></button>
+  <!-- Players & scores (Add player and History are on the top bar) -->
+  <div class="menu-section">Game</div>
   <button type="button" class="item" data-act="change-players"><span class="ico">👥</span><span class="lbl">Change players</span></button>
-
-  <!-- Scores -->
-  <div class="menu-section">Scores</div>
-  <button type="button" class="item" data-act="history"><span class="ico">📋</span><span class="lbl">History &amp; breaks</span></button>
   <button type="button" class="item" data-act="backup"><span class="ico">💾</span><span class="lbl">Backup &amp; share</span></button>
 
   <!-- Settings -->
@@ -1118,6 +1242,22 @@
   </div>
 </div>
 
+<!-- ========== Rename (tap a player's name) ========== -->
+<div id="ren" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ren-title">
+  <form class="modal ren-modal" id="ren-form">
+    <div class="modal-head">
+      <h2 id="ren-title">Rename player</h2>
+      <button type="button" class="ghost" id="ren-close" aria-label="Close">✕</button>
+    </div>
+    <label for="ren-name">Name</label>
+    <input type="text" id="ren-name" maxlength="24" autocomplete="off" autocapitalize="characters" />
+    <div class="ask-actions" style="margin-top:1rem">
+      <button type="button" class="ghost" id="ren-cancel">Cancel</button>
+      <button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+</div>
+
 <!-- ========== Player dialog ========== -->
 <div id="pdialog" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pd-title">
   <div class="modal" id="pd-modal">
@@ -1174,7 +1314,7 @@
     { name: "Red", value: 21, cls: "red", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 23; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 24; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -1193,7 +1333,7 @@
   let state = load();
   let undoStack = [];
   let setup = defaultSetup();
-  const ui = { tab: "all", gain: null, modalOpen: true, sheet: false, mode: "add", dlg: null, dlgColor: null, lastFocus: null, sheetFocus: null, cp: null, editingName: null, hist: false, addp: null, bkp: false, final: null };
+  const ui = { tab: "all", gain: null, modalOpen: true, sheet: false, mode: "add", dlg: null, dlgColor: null, lastFocus: null, sheetFocus: null, cp: null, editingName: null, hist: false, addp: null, bkp: false, final: null, ren: null };
   let soundOn = safeGet(SOUND_KEY) !== "off";
 
   const $ = id => document.getElementById(id);
@@ -1210,6 +1350,7 @@
       const s = raw ? JSON.parse(raw) : null;
       if (s && Array.isArray(s.players)) s.players.forEach(p => { if (typeof p.name === "string") p.name = p.name.toUpperCase(); });
       if (s && !Array.isArray(s.finished)) s.finished = []; // saves from before finishing order existed
+      if (s && typeof s.gameId !== "string") { s.gameId = Date.now().toString(36) + "-old"; s.startedAt = s.startedAt || Date.now(); }
       return s;
     } catch (_) { return null; }
   }
@@ -1265,6 +1406,8 @@
       winner: null, // index, -1 = draw, null = in progress
       ended: false,
       endReason: null,
+      gameId: newGameId(), // links this game to its entry in History → Past games
+      startedAt: Date.now(),
     };
     undoStack = [];
     ui.tab = "all"; ui.sheet = false;
@@ -1272,8 +1415,9 @@
   }
 
   function newRack() {
+    archiveGame(state); // already saved when it finished; this just makes sure
     state.players.forEach(p => { p.score = 0; p.highBreak = 0; p.centuries = 0; });
-    Object.assign(state, { breakBalls: [], breaks: [], log: [], finished: [], winner: null, ended: false, endReason: null });
+    Object.assign(state, { breakBalls: [], breaks: [], log: [], finished: [], winner: null, ended: false, endReason: null, gameId: newGameId(), startedAt: Date.now() });
     state.current = (state.current + 1) % state.players.length;
     undoStack = [];
     ui.gain = null; ui.sheet = false;
@@ -1288,13 +1432,54 @@
       message: "Every player goes back to 0 and the points history and breaks are cleared. Players, names, colours and wins are kept. You can Undo this.",
     });
     if (!okGo || !state) return;
+    archiveGame(state); // keep the scores so far in History → Past games
     snapshot();
     state.players.forEach(p => { p.score = 0; p.highBreak = 0; p.centuries = 0; });
-    Object.assign(state, { breakBalls: [], breaks: [], log: [], finished: [], winner: null, ended: false, endReason: null });
+    Object.assign(state, { breakBalls: [], breaks: [], log: [], finished: [], winner: null, ended: false, endReason: null, gameId: newGameId(), startedAt: Date.now() });
     ui.gain = null;
     ui.modalOpen = false;
     save(); render();
     toast("🔁 All points reset to 0");
+  }
+
+  // ================= Past games archive =================
+  // Every game is saved here when it ends (or is replaced by a new one), newest first.
+  const ARCHIVE_KEY = "snooker-century-archive-v1";
+  const ARCHIVE_MAX = 30;
+  const newGameId = () => Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  function loadArchive() {
+    try {
+      const a = JSON.parse(localStorage.getItem(ARCHIVE_KEY) || "[]");
+      return Array.isArray(a) ? a.filter(g => g && typeof g.id === "string" && Array.isArray(g.players)) : [];
+    } catch (_) { return []; }
+  }
+  function saveArchive(list) {
+    try { localStorage.setItem(ARCHIVE_KEY, JSON.stringify(list.slice(0, ARCHIVE_MAX))); }
+    catch (_) {
+      // Storage full: keep fewer games, drop their point-by-point logs first.
+      try { localStorage.setItem(ARCHIVE_KEY, JSON.stringify(list.slice(0, 10).map(g => ({ ...g, log: [] })))); } catch (_) {}
+    }
+  }
+  function archiveGame(st) {
+    if (!st || !Array.isArray(st.players)) return;
+    const played = (st.log && st.log.length) || st.players.some(p => p.score !== 0);
+    if (!played) return; // nothing worth keeping
+    if (!st.gameId) st.gameId = newGameId();
+    const done = Array.isArray(st.finished) ? st.finished : [];
+    const order = [...done, ...st.players.map((_, i) => i).filter(i => !done.includes(i)).sort((a, b) => st.players[b].score - st.players[a].score)];
+    const entry = {
+      id: st.gameId,
+      startedAt: st.startedAt || (st.log && st.log[0] && st.log[0].time) || Date.now(),
+      endedAt: Date.now(),
+      status: st.ended ? (st.endReason === "target" ? "Finished" : "Ended early") : "Not finished",
+      target: st.target,
+      winner: st.ended && st.winner >= 0 ? st.players[st.winner].name : null,
+      order,
+      finished: done.slice(),
+      players: st.players.map(p => ({ name: p.name, color: p.color, score: p.score })),
+      log: (st.log || []).slice(-400).map(e => ({ n: e.n, time: e.time, type: e.type, player: e.player, by: e.by, value: e.value, ball: e.ball, after: e.after })),
+    };
+    saveArchive([entry, ...loadArchive().filter(g => g.id !== entry.id)]);
   }
 
   // ================= Themed confirm dialog =================
@@ -1487,29 +1672,29 @@
 
     wrap.style.setProperty("--rgap", gap + "px");
     wrap.style.setProperty("--rowh", "0px");
+    wrap.classList.remove("tall", "duo", "row1", "compact"); // older layouts
 
-    // Row styles, biggest first: tall (3 lines) → duo (2 lines) → row (1 line).
-    // Try the biggest that suits the space; if a row still doesn't fit, fall back to the next.
+    // Two card styles: "cards" (two lines, big) and "lines" (one line, for many players).
+    // Use cards when they fit at a readable size; scale everything (--k) to fill the space,
+    // but never wider than the screen.
+    const rowW = rows[0].clientWidth || vw;
     const LIMITS = {
-      //       width needed at k=1, smallest k allowed, largest k allowed
-      tall: { w: 250, min: 0.9, max: 1.9 },
-      duo:  { w: 345, min: 0.85, max: 1.9 },
-      row:  { w: 360, min: 0.78, max: 1.35 },
+      //        width needed at k=1, smallest k, largest k
+      cards: { w: 205, min: 0.85, max: 2.0 },
+      lines: { w: 335, min: 0.82, max: 1.4 },
     };
-    const order = target >= 175 ? ["tall", "duo", "row"] : target >= 95 ? ["duo", "row"] : ["row"];
-    for (const mode of order) {
-      wrap.classList.toggle("tall", mode === "tall");
-      wrap.classList.toggle("duo", mode === "duo");
-      wrap.classList.toggle("row1", mode === "row");
+    const tryMode = mode => {
+      wrap.classList.toggle("cards", mode === "cards");
+      wrap.classList.toggle("lines", mode === "lines");
       const L = LIMITS[mode];
       wrap.style.setProperty("--k", "1");
       const natural = rows[0].offsetHeight || 60;
-      // Grow to fill the height, but never wider than the screen (k < 1 on narrow phones).
-      const widthLimit = (vw - 32) / L.w;
-      const k = clamp(Math.min(target / natural, widthLimit, L.max), Math.min(L.min, widthLimit), 1.9);
+      const widthLimit = (rowW - 20) / L.w;
+      const k = clamp(Math.min(target / natural, widthLimit, L.max), Math.min(L.min, widthLimit), L.max);
       wrap.style.setProperty("--k", k.toFixed(3));
-      if (mode === "row" || (rows[0].offsetHeight || 0) <= target + 1) break; // fits → keep this style
-    }
+      return (rows[0].offsetHeight || 0) <= target + 1;
+    };
+    if (!tryMode("cards")) tryMode("lines");
     wrap.style.setProperty("--rowh", Math.max(0, target) + "px");
   }
   let fitQueued = false;
@@ -1572,6 +1757,7 @@
     state.ended = true;
     state.endReason = reason;
     if (winnerIdx >= 0) state.players[winnerIdx].wins += 1;
+    archiveGame(state); // saved to History → Past games
     ui.modalOpen = true; ui.sheet = false;
     sfx.win(); buzz([80, 60, 120]);
     if (winnerIdx >= 0) confetti();
@@ -1605,7 +1791,7 @@
     if (!state) return;
     const okGo = await askConfirm({
       title: "End the game?", icon: "🏁", confirmText: "End game", danger: true,
-      message: "The final standings will be shown, then ALL players' data (names, scores, history and wins) will be cleared.",
+      message: "The final standings will be shown and the game is saved in History → Past games. Then the players and scores are cleared for a new game.",
     });
     if (!okGo || !state) return;
     // Freeze a copy of the final standings for the results window.
@@ -1619,7 +1805,8 @@
       final.endReason = "manual";
       final.ended = true;
     }
-    // Clear everything: game, saved game, undo history, and the setup names.
+    // Keep a copy in History → Past games, then clear everything: game, undo history, setup names.
+    archiveGame(final);
     state = null;
     undoStack = [];
     setup = defaultSetup();
@@ -1666,6 +1853,9 @@
   // Small line icons drawn as SVG so they look the same on every phone (emoji/symbol fonts vary).
   const ICONS = {
     reset: ["M3 12a9 9 0 1 0 3-6.7", "M3 4v5h5"],
+    edit: ["M4 20h4L19 9l-4-4L4 16v4", "M13.5 6.5l4 4"],
+    addUser: ["M15 20v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1", "M8.5 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7", "M19 8v6", "M16 11h6"],
+    history: ["M3 12a9 9 0 1 0 3-6.7", "M3 4v5h5", "M12 7v5l3 2"],
     trash: ["M4 7h16", "M9 7V4h6v3", "M6 7l1 13h10l1-13", "M10 11v6", "M14 11v6"],
   };
   function icon(name) {
@@ -1791,76 +1981,60 @@
     state.players.forEach((p, i) => {
       const isCur = i === state.current && !state.ended;
       const pct = Math.max(0, Math.min(100, (p.score / state.target) * 100));
-      const fg = contrast(p.color);
-      // The score is the button that opens the scoring pop-up (whole row is tappable too).
-      const scoreEl = el("button", {
-        type: "button", class: "pscore", "data-fk": `score-${i}`, text: String(p.score),
-        "aria-haspopup": "dialog", "aria-label": `${p.name}, ${p.score} points. Open scoring`,
-        disabled: state.ended,
-        onclick: e => { e.stopPropagation(); selectPlayer(i); },
-      });
-
-      // Row layout:  [colour] NAME ✎   |   ● AT THE TABLE / Need 100 to go   |   ▼ score ▲
       const place = placeOf(i);
+      const stop = fn => e => { e.stopPropagation(); fn(); };
 
-      // Right: ▼ score ▲
-      const mid = el("div", { class: "pmid" }, [
-        el("button", {
-          type: "button", class: "arrow down", "data-fk": `down-${i}`, text: "▼",
-          "aria-label": `Take 1 point from ${p.name}`, disabled: state.ended,
-          onclick: e => { e.stopPropagation(); adjust(i, -1); },
-        }),
+      // Card layout:
+      //   [↺ reset]        NAME 🥇        [✎ edit]
+      //   [−]            28 / Need 72        [+]
+      const scoreEl = el("button", {
+        type: "button", class: "pc-pts", "data-fk": `score-${i}`, text: String(p.score),
+        "aria-haspopup": "dialog", "aria-label": `${p.name}, ${p.score} points. Open scoring`,
+        disabled: state.ended, onclick: stop(() => selectPlayer(i)),
+      });
+      const mid = el("div", { class: "pc-mid" }, [
         scoreEl,
-        el("button", {
-          type: "button", class: "arrow up", "data-fk": `up-${i}`, text: "▲",
-          "aria-label": `Add 1 point to ${p.name}`, disabled: state.ended,
-          onclick: e => { e.stopPropagation(); adjust(i, 1); },
-        }),
+        el("div", { class: "pc-need", text: place >= 0 ? "Done" : `Need ${Math.max(0, state.target - p.score)}` }),
       ]);
 
-      // Status: just "Need N" (no "AT THE TABLE" badge — the highlighted row shows who's at the table).
-      const centre = el("div", { class: "pcenter" }, [
-        el("div", { class: "pneed", text: place >= 0 ? "Done" : `Need ${Math.max(0, state.target - p.score)}` }),
-      ]);
-
-      // Between "Need N to go" and ▼: reset this player's score / delete this player (stacked)
-      const acts = el("div", { class: "pacts" }, [
+      const card = el("div", { class: "pc", onclick: () => selectPlayer(i) }, [
         el("button", {
-          type: "button", class: "pact", "data-fk": `reset-${i}`,
+          type: "button", class: "pc-icon pc-reset", "data-fk": `reset-${i}`,
           "aria-label": `Reset ${p.name}'s score to 0`, title: "Reset score to 0",
-          disabled: state.ended || p.score === 0,
-          onclick: e => { e.stopPropagation(); resetPlayerScore(i); },
+          disabled: state.ended || p.score === 0, onclick: stop(() => resetPlayerScore(i)),
         }, [icon("reset")]),
+        el("div", { class: "pc-title" }, [
+          el("button", {
+            type: "button", class: "pc-name", "data-fk": `name-${i}`,
+            "aria-haspopup": "dialog", "aria-label": `Rename ${p.name}`, title: "Rename",
+            onclick: stop(() => openRename(i)),
+          }, [p.name]),
+          // Winner icon after the name: finishing medal, otherwise 👑 for the current leader
+          place >= 0
+            ? el("span", { class: "pwin", text: ["🥇", "🥈", "🥉"][place] || "🏁", title: `Finished ${ordinal(place + 1)}`, "aria-label": `Finished ${ordinal(place + 1)}` })
+            : i === lead ? el("span", { class: "pwin", text: "👑", title: "Leader", "aria-label": "Leader" }) : null,
+        ]),
         el("button", {
-          type: "button", class: "pact del", "data-fk": `delete-${i}`,
-          "aria-label": `Delete ${p.name}`, title: "Delete player",
-          disabled: state.ended || state.players.length <= MIN_PLAYERS,
-          onclick: e => { e.stopPropagation(); deletePlayer(i); },
-        }, [icon("trash")]),
+          type: "button", class: "pc-icon pc-edit", "data-fk": `edit-${i}`,
+          "aria-haspopup": "dialog", "aria-label": `Edit ${p.name}`, title: "Edit player",
+          onclick: stop(() => openPlayerDialog(i)),
+        }, [icon("edit")]),
+        // Score line has its own box so the big − / + never squeeze the name line above it
+        el("div", { class: "pc-line" }, [
+          el("button", {
+            type: "button", class: "pc-step minus", "data-fk": `down-${i}`, text: "−",
+            "aria-label": `Take 1 point from ${p.name}`, disabled: state.ended, onclick: stop(() => adjust(i, -1)),
+          }),
+          mid,
+          el("button", {
+            type: "button", class: "pc-step plus", "data-fk": `up-${i}`, text: "+",
+            "aria-label": `Add 1 point to ${p.name}`, disabled: state.ended, onclick: stop(() => adjust(i, 1)),
+          }),
+        ]),
       ]);
 
-      // Left: player logo (display only) + name (tap to edit name / colour / see history)
-      const left = el("div", { class: "pleft" }, [
-        el("div", {
-          class: "avatar", style: `background:${p.color};color:${fg}`, text: initials(p.name), "aria-hidden": "true",
-        }),
-        el("button", {
-          type: "button", class: "pname", "data-fk": `name-${i}`,
-          "aria-haspopup": "dialog", "aria-label": `${p.name}: edit and view points history`, title: "Edit / history",
-          onclick: e => { e.stopPropagation(); openPlayerDialog(i); },
-        }, [p.name]),
-        // Winner icon after the name: finishing medal, otherwise 👑 for the current leader
-        place >= 0
-          ? el("span", { class: "pwin", text: ["🥇", "🥈", "🥉"][place] || "🏁", title: `Finished ${ordinal(place + 1)}`, "aria-label": `Finished ${ordinal(place + 1)}` })
-          : i === lead ? el("span", { class: "pwin", text: "👑", title: "Leader", "aria-label": "Leader" }) : null,
-      ]);
-
-      // Reset / delete now live in the player window (tap the name), so rows have room for bigger text.
-      void acts;
-      const head = el("div", { class: "prow-head", onclick: () => selectPlayer(i) }, [left, centre, mid]);
-
-      const row = el("article", { class: "prow" + (isCur ? " active" : "") + (placeOf(i) >= 0 ? " done" : ""), style: `--pc:${p.color}`, "aria-label": `${p.name}, ${p.score} points` }, [
-        head,
+      const row = el("article", { class: "prow" + (isCur ? " active" : "") + (place >= 0 ? " done" : ""), style: `--pc:${p.color}`, "aria-label": `${p.name}, ${p.score} points` }, [
+        card,
         el("div", { class: "progress", "aria-hidden": "true" }, [el("div", { style: `width:${pct}%` })]),
       ]);
       if (ui.gain && ui.gain.idx === i) {
@@ -1871,14 +2045,15 @@
     });
   }
 
-  function logTable(entries, showPlayer) {
+  function logTable(entries, showPlayer, players = state.players) {
     if (!entries.length) return el("p", { class: "muted", text: "No points yet." });
     const head = ["#", "Time", ...(showPlayer ? ["Player"] : []), "How", "Pts", "Score"];
+    const unknown = { name: "?", color: "#888888" };
     const rows = entries.slice().reverse().slice(0, 300).map(e => {
-      const pl = state.players[e.player];
+      const pl = players[e.player] || unknown;
       let how, ptsCls, ptsText;
       if (e.type === "foul") {
-        how = el("td", {}, [foulBall(e.value), " ", el("span", { class: "tag foul-tag", text: "FOUL" }), ` by ${state.players[e.by].name}`]);
+        how = el("td", {}, [foulBall(e.value), " ", el("span", { class: "tag foul-tag", text: "FOUL" }), ` by ${(players[e.by] || unknown).name}`]);
         ptsCls = "pts-foul"; ptsText = `+${e.value}`;
       } else if (e.type === "penalty") {
         how = el("td", {}, [foulBall(e.value), " ", el("span", { class: "tag foul-tag", text: `FOUL ${e.value}` })]);
@@ -1929,18 +2104,67 @@
     ]);
   }
 
+  // History → Past games: every saved game, newest first.
+  const fmtDate = t => new Date(t).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  function pastPanel() {
+    const games = loadArchive();
+    if (!games.length) return el("p", { class: "muted", text: "No past games yet. Games are saved here when they end." });
+    const medals = ["🥇", "🥈", "🥉"];
+    const list = el("div", { class: "past-list" }, games.map(g => {
+      const order = Array.isArray(g.order) && g.order.length === g.players.length ? g.order : g.players.map((_, i) => i);
+      const standings = el("div", { class: "past-standings" }, order.map((pi, rank) => {
+        const p = g.players[pi];
+        if (!p) return null;
+        return el("div", { class: "past-row" }, [
+          el("span", { class: "past-rank", text: medals[rank] || `${rank + 1}.` }),
+          dot(p.color),
+          el("span", { class: "past-name", text: p.name }),
+          el("span", { class: "past-score", text: String(p.score) }),
+        ]);
+      }));
+      const details = (g.log && g.log.length)
+        ? el("details", { class: "past-log" }, [el("summary", { text: `Points history (${g.log.length})` }), logTable(g.log, true, g.players)])
+        : null;
+      return el("article", { class: "past-card" }, [
+        el("div", { class: "past-head" }, [
+          el("strong", { text: fmtDate(g.endedAt) }),
+          el("span", { class: `past-status ${g.status === "Finished" ? "ok" : ""}`, text: g.status }),
+          el("span", { class: "muted small", text: `Target ${g.target}` }),
+        ]),
+        g.winner ? el("div", { class: "past-winner", text: `🏆 ${g.winner}` }) : null,
+        standings,
+        details,
+      ]);
+    }));
+    const clear = el("button", {
+      type: "button", class: "ghost past-clear", text: "🗑 Clear past games",
+      onclick: async () => {
+        const okGo = await askConfirm({
+          title: "Clear past games?", icon: "🗑", confirmText: "Clear all", danger: true,
+          message: `All ${games.length} saved game${games.length === 1 ? "" : "s"} will be removed from this phone. This can't be undone.`,
+        });
+        if (!okGo) return;
+        try { localStorage.removeItem(ARCHIVE_KEY); } catch (_) {}
+        toast("Past games cleared");
+        renderHistory();
+      },
+    });
+    return el("div", {}, [list, clear]);
+  }
+
   function renderHistory() {
     $("hist").classList.toggle("hidden", !ui.hist);
     if (!ui.hist) return;
-    // Tabs: All points | one per player | Breaks
-    const defs = [
+    // Tabs: All points | one per player | Breaks | Past games  (only Past games before a game starts)
+    const defs = state ? [
       ["all", "📋 All points", null],
       ...state.players.map((p, i) => [`p${i}`, p.name, p.color]),
       ["breaks", "🎯 Breaks", null],
-    ];
-    if (!defs.some(([id]) => id === ui.tab)) ui.tab = "all";
-    const pIdx = ui.tab.startsWith("p") ? Number(ui.tab.slice(1)) : -1;
-    $("hist-title").textContent = ui.tab === "breaks" ? "🎯 Breaks" : pIdx >= 0 ? `👤 ${state.players[pIdx].name}` : "📋 Points history";
+      ["past", "🗂 Past games", null],
+    ] : [["past", "🗂 Past games", null]];
+    if (!defs.some(([id]) => id === ui.tab)) ui.tab = state ? "all" : "past";
+    const pIdx = ui.tab.startsWith("p") && ui.tab !== "past" ? Number(ui.tab.slice(1)) : -1;
+    $("hist-title").textContent = ui.tab === "past" ? "🗂 Past games" : ui.tab === "breaks" ? "🎯 Breaks" : pIdx >= 0 ? `👤 ${state.players[pIdx].name}` : "📋 Points history";
     const tabs = $("tabs");
     tabs.innerHTML = "";
     defs.forEach(([id, label, color]) => {
@@ -1951,7 +2175,7 @@
     });
     const panel = $("tab-panel");
     panel.innerHTML = "";
-    panel.appendChild(ui.tab === "breaks" ? breaksPanel() : pIdx >= 0 ? playerHistory(pIdx) : logTable(state.log, true));
+    panel.appendChild(ui.tab === "past" ? pastPanel() : ui.tab === "breaks" ? breaksPanel() : pIdx >= 0 ? playerHistory(pIdx) : logTable(state.log, true));
   }
 
   function openHistory(tab) {
@@ -1964,7 +2188,7 @@
     if (!ui.hist) return;
     ui.hist = false;
     render();
-    $("menu-btn").focus({ preventScroll: true });
+    $("tb-hist").focus({ preventScroll: true });
   }
 
   // ================= Add player mid-game =================
@@ -1995,7 +2219,7 @@
     if (ui.addp === null) return;
     ui.addp = null;
     render();
-    $("menu-btn").focus({ preventScroll: true });
+    $("tb-add").focus({ preventScroll: true });
   }
   function addPlayer() {
     if (!state || ui.addp === null) return;
@@ -2162,7 +2386,7 @@
     const show = state.ended && ui.modalOpen;
     $("winner").classList.toggle("hidden", !show);
     $("gameover-banner").classList.toggle("hidden", !state.ended);
-    document.body.classList.toggle("lock", show || !!askResolve || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || (ui.sheet && !state.ended));
+    document.body.classList.toggle("lock", show || !!askResolve || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || ui.ren !== null || (ui.sheet && !state.ended));
     if (!state.ended) return;
     paintResults(state);
     $("play-again").textContent = "Play again";
@@ -2216,12 +2440,17 @@
       if (!["sound", "wake", "backup"].includes(b.dataset.act)) b.disabled = !inGame;
     });
 
+    // Top bar: Add player only during a game; History always (Past games works from setup too).
+    $("tb-add").classList.toggle("hidden", !inGame);
+    $("tb-add").disabled = inGame && state.players.length >= MAX_PLAYERS;
+
     if (!inGame) {
-      ui.sheet = false; ui.hist = false; ui.addp = null;
+      ui.sheet = false; ui.addp = null; ui.ren = null;
       $("sheet").classList.add("hidden");
-      $("hist").classList.add("hidden");
       $("addp").classList.add("hidden");
-      document.body.classList.toggle("lock", ui.bkp);
+      $("ren").classList.add("hidden");
+      renderHistory(); // Past games only
+      document.body.classList.toggle("lock", ui.bkp || ui.hist);
       $("subtitle").textContent = "Set up your game";
       // After End game: show the frozen final scores; data is already cleared.
       $("winner").classList.toggle("hidden", !ui.final);
@@ -2250,7 +2479,6 @@
     renderBackup();
     updateWakeLock();
 
-    document.querySelector('#drawer [data-act="add-player"]').disabled = state.players.length >= MAX_PLAYERS;
     document.querySelector('#drawer [data-act="end-turn"]').disabled = state.ended;
     document.querySelector('#drawer [data-act="undo"]').disabled = undoStack.length === 0;
 
@@ -2348,9 +2576,10 @@
     "change-players": async () => {
       const okGo = await askConfirm({
         title: "Change players?", icon: "👥", confirmText: "Change players", danger: true,
-        message: "This ends the current game and goes back to setup. Names and colours are kept; all scores, wins and history are cleared.",
+        message: "This ends the current game (it's saved in History → Past games) and goes back to setup. Names and colours are kept.",
       });
       if (!okGo || !state) return;
+      archiveGame(state); // keep the scores so far in History → Past games
       setup = { players: state.players.map(p => ({ name: p.name, color: p.color })), target: state.target };
       state = null; undoStack = [];
       try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
@@ -2389,6 +2618,54 @@
 
   // ================= Dialog & results controls =================
   // (Scoring pop-up is scoring-only; name/colour editing lives on the ✎ button of each row.)
+
+  // Top bar: Add player + History
+  $("tb-add").prepend(icon("addUser"));
+  $("tb-hist").prepend(icon("history"));
+  $("tb-add").addEventListener("click", openAddPlayer);
+  $("tb-hist").addEventListener("click", () => openHistory(state ? "all" : "past"));
+
+  // Rename pop-up (tap a player's name)
+  function openRename(i) {
+    if (!state) return;
+    const p = state.players[i];
+    ui.ren = i;
+    ui.lastFocus = document.activeElement;
+    $("ren-title").textContent = `Rename ${p.name}`;
+    $("ren-form").style.setProperty("--pc", p.color);
+    $("ren-name").value = p.name;
+    $("ren").classList.remove("hidden");
+    document.body.classList.add("lock");
+    setTimeout(() => { $("ren-name").focus(); $("ren-name").select(); }, 30);
+  }
+  function closeRename() {
+    if (ui.ren === null) return;
+    const i = ui.ren;
+    ui.ren = null;
+    $("ren").classList.add("hidden");
+    if (state) renderResults(); else document.body.classList.remove("lock");
+    const back = document.querySelector(`[data-fk="name-${i}"]`);
+    if (back) back.focus({ preventScroll: true });
+  }
+  $("ren-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const i = ui.ren;
+    if (i === null || !state) return;
+    const name = cleanName($("ren-name").value, "");
+    if (!name) { toast("Name can't be empty"); $("ren-name").focus(); return; }
+    const p = state.players[i];
+    if (name !== p.name) {
+      snapshot();
+      p.name = name;
+      save();
+      toast("✔ Name updated");
+    }
+    closeRename();
+    render();
+  });
+  $("ren-close").addEventListener("click", closeRename);
+  $("ren-cancel").addEventListener("click", closeRename);
+  $("ren").addEventListener("click", e => { if (e.target.id === "ren") closeRename(); });
 
   // History pop-up
   $("hist-close").addEventListener("click", closeHistory);
@@ -2433,6 +2710,7 @@
       return; // no shortcuts while a confirmation is open
     }
     if (e.key === "Escape") {
+      if (ui.ren !== null) return closeRename();
       if (ui.cp !== null) return closeColorPicker();
       if (ui.addp !== null) return closeAddPlayer();
       if (ui.bkp) return closeBackup();
@@ -2444,7 +2722,7 @@
       if (state && state.ended && ui.modalOpen) { ui.modalOpen = false; renderResults(); }
       return;
     }
-    if (!state || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || drawerOpen() || e.target.tagName === "INPUT") return;
+    if (!state || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || ui.ren !== null || drawerOpen() || e.target.tagName === "INPUT") return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
@@ -2594,7 +2872,9 @@
       if (!Array.isArray(s.finished) || s.finished.some(i => !isInt(i, 0, n - 1)) || new Set(s.finished).size !== s.finished.length) fail("bad finished");
       finished = s.finished.slice();
     }
-    return { target: s.target, players, current: s.current, breakBalls, breaks, log, finished, winner: s.winner, ended: s.ended, endReason: s.endReason };
+    const gameId = typeof s.gameId === "string" && /^[\w-]{1,40}$/.test(s.gameId) ? s.gameId : newGameId();
+    const startedAt = Number.isFinite(s.startedAt) ? s.startedAt : Date.now();
+    return { target: s.target, players, current: s.current, breakBalls, breaks, log, finished, winner: s.winner, ended: s.ended, endReason: s.endReason, gameId, startedAt };
   }
 
   async function restoreFromText(text) {
@@ -2612,6 +2892,7 @@
         message: "The game in progress will be replaced by the one in this backup file.",
       });
       if (!okGo) return false;
+      archiveGame(state); // keep the replaced game in History → Past games
     }
     state = restored;
     undoStack = [];
