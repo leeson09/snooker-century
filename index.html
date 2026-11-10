@@ -959,14 +959,15 @@
   /* ↺ and ✎ — same size, white icon on dark tile */
   /* Top line (↺ NAME ✎) grows less than the score line so long names always fit */
   #players { --kt: min(var(--k), 1.25); }
+  /* ↺ and ✎ — symbol only: no box, no outline, theme colour */
   #players .pc-icon {
-    width: calc(38px * var(--kt)); height: calc(38px * var(--kt)); min-height: 0; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center; border-radius: calc(10px * var(--kt));
-    background: #2c3a33; border: 1px solid rgba(255, 255, 255, 0.1); color: #fff;
+    width: calc(34px * var(--kt)); height: calc(34px * var(--kt)); min-height: 0; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;
+    background: transparent; border: none; box-shadow: none; color: var(--muted); opacity: 0.85;
   }
-  [data-theme="dark"] #players .pc-icon { background: #1d2e25; border-color: #2f463a; }
-  #players .pc-icon .ic { width: calc(18px * var(--kt)); height: calc(18px * var(--kt)); }
-  #players .pc-icon:disabled { opacity: 0.35; }
+  #players .pc-icon:active:not(:disabled) { background: color-mix(in srgb, var(--text) 8%, transparent); }
+  #players .pc-icon .ic { width: calc(17px * var(--kt)); height: calc(17px * var(--kt)); }
+  #players .pc-icon:disabled { opacity: 0.25; }
   #players .pc-reset { grid-area: reset; justify-self: start; }
   #players .pc-edit { grid-area: edit; justify-self: end; }
   #players.lines .pc-icon { width: calc(32px * var(--k)); height: calc(32px * var(--k)); }
@@ -986,11 +987,13 @@
   #players.lines .pc-title .pwin { font-size: calc(0.9rem * var(--k)); }
 
   /* − and + */
+  /* − and + — symbol only: no box, no outline, slightly transparent */
   #players .pc-step {
-    width: calc(50px * var(--k)); height: calc(50px * var(--k)); min-height: 0; padding: 0;
-    border-radius: calc(13px * var(--k)); font-size: calc(30px * var(--k)); font-weight: 900; line-height: 1;
-    background: var(--surface-2); border: 1px solid var(--border);
+    width: calc(44px * var(--k)); height: calc(44px * var(--k)); min-height: 0; padding: 0;
+    border-radius: 50%; font-size: calc(28px * var(--k)); font-weight: 900; line-height: 1;
+    background: transparent; border: none; box-shadow: none; opacity: 0.8;
   }
+  #players .pc-step:active:not(:disabled) { background: color-mix(in srgb, var(--text) 8%, transparent); opacity: 1; }
   #players .pc-step.minus { grid-area: minus; justify-self: start; color: var(--minus); }
   #players .pc-step.plus { grid-area: plus; justify-self: end; color: var(--plus); }
   #players.lines .pc-step { width: calc(36px * var(--k)); height: calc(38px * var(--k)); font-size: calc(22px * var(--k)); border-radius: calc(10px * var(--k)); }
@@ -1112,7 +1115,7 @@
       </div>
     </div>
 
-    <p class="muted small" id="players-hint" style="margin:0 0 0.6rem">Tap a player to score · tap a name to rename · ✎ to edit.</p>
+    <p class="muted small" id="players-hint" style="margin:0 0 0.6rem">Tap a player to score · ✎ to edit a player.</p>
     <div id="players"></div>
   </section>
 </main>
@@ -1314,7 +1317,7 @@
     { name: "Red", value: 21, cls: "red", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 24; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 25; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -1665,8 +1668,9 @@
     const main = wrap.closest("main");
     const padB = main ? parseFloat(getComputedStyle(main).paddingBottom) || 16 : 16;
     const top = wrap.getBoundingClientRect().top + (window.scrollY || 0);
-    const n = rows.length;
-    const gap = n <= 3 ? 12 : n <= 6 ? 9 : 6;
+    // Size for up to 5 players on screen; a 6th and beyond keep the same card size and the list scrolls.
+    const n = Math.min(rows.length, 5);
+    const gap = n <= 3 ? 12 : 9;
     const avail = vh - top - padB;
     const target = Math.floor((avail - gap * (n - 1)) / n);
 
@@ -1694,7 +1698,7 @@
       wrap.style.setProperty("--k", k.toFixed(3));
       return (rows[0].offsetHeight || 0) <= target + 1;
     };
-    if (!tryMode("cards")) tryMode("lines");
+    tryMode("cards"); // always the same card format, however many players
     wrap.style.setProperty("--rowh", Math.max(0, target) + "px");
   }
   let fitQueued = false;
@@ -2004,11 +2008,7 @@
           disabled: state.ended || p.score === 0, onclick: stop(() => resetPlayerScore(i)),
         }, [icon("reset")]),
         el("div", { class: "pc-title" }, [
-          el("button", {
-            type: "button", class: "pc-name", "data-fk": `name-${i}`,
-            "aria-haspopup": "dialog", "aria-label": `Rename ${p.name}`, title: "Rename",
-            onclick: stop(() => openRename(i)),
-          }, [p.name]),
+          el("span", { class: "pc-name", "data-fk": `name-${i}` }, [p.name]),
           // Winner icon after the name: finishing medal, otherwise 👑 for the current leader
           place >= 0
             ? el("span", { class: "pwin", text: ["🥇", "🥈", "🥉"][place] || "🏁", title: `Finished ${ordinal(place + 1)}`, "aria-label": `Finished ${ordinal(place + 1)}` })
