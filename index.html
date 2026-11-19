@@ -250,7 +250,7 @@
   .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 0.35rem; }
 
 
-  .balls { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.6rem; }
+  .balls { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.6rem; }
   .ball {
     aspect-ratio: 1; min-height: 60px; border-radius: 50%; padding: 0; font-size: 1.6rem; font-weight: 900;
     box-shadow: inset -6px -6px 10px rgba(0, 0, 0, 0.45), 0 3px 6px rgba(0, 0, 0, 0.3);
@@ -258,6 +258,8 @@
   }
   .ball small { font-size: 0.7rem; font-weight: 800; }
   .red { background: #c8102e; color: #fff; }
+  .red1 { background: radial-gradient(circle at 35% 30%, #ff5a4f, #e10600 55%, #a80400); color: #fff; }   /* pitch red, 1 pt */
+  .maroon { background: radial-gradient(circle at 35% 30%, #8a1c2b, #5a0a16 55%, #36040c); color: #fff; } /* dark maroon, 21 pts */
   .yellow { background: #f6d300; color: #111; }
   .green { background: #0f8a3c; color: #fff; }
   .brown { background: #7b4a1e; color: #fff; }
@@ -1036,6 +1038,38 @@
     .topbar h1 { font-size: 0.98rem; }
   }
 
+  /* ---------- Scoring pop-up: + / − toggle beside the name ---------- */
+  .sh-name-line { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+  .sh-name-line h2 { min-width: 0; }
+  .sign-toggle {
+    flex: none; display: inline-flex; padding: 0; gap: 4px; border-radius: 999px;
+    background: transparent; border: none; box-shadow: none;
+  }
+  .sign-toggle .sg { border: none !important; outline: none; }
+  /* Balls: always 2 rows of 4 (phone and desktop) */
+  .balls { grid-template-columns: repeat(4, 1fr) !important; }
+  .balls .ball { width: 100%; max-width: 96px; justify-self: center; }
+  .sign-toggle .sg {
+    width: 38px; height: 32px; min-height: 0; padding: 0; border: none; border-radius: 999px;
+    background: transparent; box-shadow: none; font-size: 1.3rem; font-weight: 900; line-height: 1; color: var(--muted);
+  }
+  .sign-toggle .sg.plus[aria-pressed="true"] { background: var(--plus); color: #fff; }
+  .sign-toggle .sg.minus[aria-pressed="true"] { background: var(--danger); color: #fff; }
+  [data-theme="dark"] .sign-toggle .sg.plus[aria-pressed="true"] { color: #0b1510; }
+  /* Phones: make room so the name shows in full beside the toggle */
+  @media (max-width: 480px) {
+    #sh-head { gap: 0.5rem; }
+    #sh-head #sh-avatar { display: none; }
+    #sh-head h2 { font-size: 1.15rem; }
+    .sh-name-line { gap: 0.45rem; }
+    .sign-toggle .sg { width: 32px; height: 30px; font-size: 1.2rem; }
+    #sh-head .sh-score { font-size: 2.3rem; }
+    #sh-head #sh-close { width: 40px; min-width: 40px; height: 40px; }
+  }
+  /* Subtract mode: red hint on the pop-up so it's obvious */
+  #sh-modal.minus-mode #sh-meta { color: var(--minus); font-weight: 900; }
+  .balls.minus-mode { box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--danger) 70%, transparent), inset 0 3px 14px rgba(0, 0, 0, 0.45); }
+
   /* ---------- Rename pop-up ---------- */
   #ren { z-index: 13; }
   .ren-modal { max-width: 420px; }
@@ -1055,6 +1089,211 @@
   .past-log { margin-top: 0.5rem; }
   .past-log summary { cursor: pointer; font-weight: 800; color: var(--gold); padding: 0.25rem 0; }
   .past-clear { margin-top: 0.9rem; width: 100%; }
+
+  /* =====================================================================
+     TOURNAMENT PAGE (same premium theme)
+     ===================================================================== */
+  .tour {
+    position: fixed; inset: 0; z-index: 11; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    background: radial-gradient(1100px 520px at 50% -220px, color-mix(in srgb, var(--brand-hi) 38%, transparent), transparent 70%), var(--bg);
+  }
+  .tr-bar { position: sticky; top: 0; }
+  .tr-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 900px; margin: 0 auto; padding: 0.75rem max(0.75rem, env(safe-area-inset-left)) 0.25rem; }
+  .tr-tabs::-webkit-scrollbar { display: none; }
+  .tr-tabs button, .tr-filter button { flex: none; white-space: nowrap; }
+  .tr-main { max-width: 900px; margin: 0 auto; padding: 0.5rem max(0.75rem, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 2rem) max(0.75rem, env(safe-area-inset-left)); }
+  .tr-pick label { margin-top: 0; }
+  .tr-pick .row { flex-wrap: nowrap; }
+  select, input[type="password"] {
+    font: inherit; font-weight: 700; font-size: 17px; width: 100%; padding: 0.7rem 0.8rem; border-radius: 12px;
+    border: 1.5px solid var(--border); background: var(--panel, var(--surface)); color: var(--text);
+  }
+  select {
+    -webkit-appearance: none; appearance: none; padding-right: 2.2rem; min-width: 0;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 20px) 55%, calc(100% - 14px) 55%; background-size: 6px 6px; background-repeat: no-repeat;
+  }
+  select:focus, input[type="password"]:focus { outline: none; border-color: var(--gold-lo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 22%, transparent); }
+  .tr-note { background: color-mix(in srgb, var(--gold) 14%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); padding: 0.6rem 0.75rem; border-radius: 12px; font-size: 0.9rem; }
+  .tr-pick .row button { flex: none; white-space: nowrap; }
+  .tr-field { margin-top: 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+  .tr-flabel { display: flex; flex-direction: column; font-weight: 800; flex: 1 1 0; min-width: 0; }
+  .tr-stepper { flex: none; }
+  .tr-segf { flex-direction: column; align-items: stretch; gap: 0.4rem; }
+  .tr-segf .tr-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+  .tr-segf .tr-seg button { padding: 0.5rem 0.4rem; }
+  .tr-flabel small { font-weight: 700; font-size: 0.78rem; }
+  .tr-stepper { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .tr-stepper button { width: 44px; padding: 0; border-radius: 50%; font-size: 1.3rem; }
+  .st-val { min-width: 2.2ch; text-align: center; font-size: 1.4rem; font-weight: 900; }
+  .tr-seg { display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px; border-radius: 999px; background: var(--surface-2); }
+  .tr-seg button { background: transparent; border: none !important; border-radius: 999px; padding: 0.5rem 0.85rem; min-height: 40px; font-size: 0.9rem; }
+  .tr-seg button[aria-pressed="true"] { background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo)); color: var(--accent-text); }
+  .tr-addrow { flex-wrap: nowrap; }
+  .tr-pform { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.75rem; }
+  .tr-pform label { margin: 0.3rem 0 0; font-weight: 800; }
+  .tr-pform .tr-field { margin-top: 0.5rem; }
+  .tr-pform .trl-err { margin: 0.2rem 0; }
+  .tr-pform .tr-addrow { margin-top: 0.4rem; }
+  .tr-inline { display: inline-flex; margin: 0.4rem 0 0; min-height: 36px; padding: 0.3rem 0.8rem; font-size: 0.9rem; }
+  input[type="tel"], input[type="search"] {
+    font: inherit; font-weight: 700; font-size: 17px; width: 100%; padding: 0.7rem 0.8rem; border-radius: 12px;
+    border: 1.5px solid var(--border); background: var(--panel, var(--surface)); color: var(--text);
+  }
+  input[type="tel"]:focus, input[type="search"]:focus { outline: none; border-color: var(--gold-lo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 22%, transparent); }
+  .tr-plist { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.6rem; }
+  .tr-prow { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; border: 1px solid var(--border); border-radius: 12px; background: var(--panel, var(--surface)); text-align: left; width: 100%; }
+  button.tr-prow, .tr-prow button.tr-prn { cursor: pointer; }
+  .tr-prn { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; background: none; border: none !important; padding: 0; min-height: 0; box-shadow: none; text-align: left; color: inherit; font: inherit; }
+  .tr-prn b { font-weight: 900; overflow-wrap: anywhere; }
+  .tr-prn small { font-size: 0.78rem; font-weight: 700; }
+  .tr-pst { display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-weight: 800; flex: none; }
+  .tr-pst small { font-size: 0.78rem; }
+  .tr-fee { flex: none; border-radius: 999px; padding: 0.3rem 0.7rem; min-height: 34px; font-size: 0.8rem; font-weight: 900; border: 1px solid transparent !important; }
+  .tr-fee.paid { background: color-mix(in srgb, #16a34a 16%, transparent); color: #15803d; border-color: color-mix(in srgb, #16a34a 45%, transparent) !important; }
+  .tr-fee.unpaid { background: color-mix(in srgb, #c62828 12%, transparent); color: #c62828; border-color: color-mix(in srgb, #c62828 40%, transparent) !important; }
+  small.tr-fee { display: inline-block; min-height: 0; padding: 0.1rem 0.5rem; margin-left: 0.4rem; font-size: 0.72rem; }
+  [data-theme="dark"] .tr-fee.paid { color: #4ade80; }
+  [data-theme="dark"] .tr-fee.unpaid { color: #f87171; }
+  .tr-prow .tr-x { flex: none; }
+  .tr-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; margin: 0.6rem 0; }
+  .tr-stat { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0.5rem 0.2rem; border-radius: 12px; background: var(--surface-2); }
+  .tr-stat b { font-size: 1.2rem; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .tr-stat small { font-size: 0.7rem; font-weight: 800; color: var(--muted); line-height: 1.15; }
+  .tr-hist { list-style: none; padding: 0; margin: 0.3rem 0; }
+  .tr-hist li { padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .tr-champ { color: var(--gold); font-weight: 900; }
+  #tr-dbq { margin: 0.5rem 0; }
+  .tr-addrow input { flex: 1; min-width: 0; }
+  .tr-addrow button { flex: none; }
+  .tr-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+  .tr-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.4rem 0.3rem 0.8rem; font-weight: 800; font-size: 0.9rem; }
+  .tr-x { min-height: 0; width: 26px; height: 26px; padding: 0; border-radius: 50%; background: transparent; border: none; color: var(--muted); font-size: 0.8rem; }
+  .tr-stack { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 0.6rem; }
+  .tr-stack button { width: 100%; }
+  .card .big { margin-top: 0.9rem; }
+  .tr-empty .row { margin-top: 0.5rem; }
+
+  /* Pools */
+  .tr-pools { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.6rem; margin-top: 0.75rem; }
+  .tr-pool { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 0.6rem 0.75rem; }
+  .tr-pool h3 { margin: 0 0 0.35rem; font-family: var(--font-display); color: var(--gold); }
+  .tr-pool ol { list-style: none; margin: 0; padding: 0; }
+  .tr-pool li { display: flex; align-items: center; gap: 0.45rem; padding: 0.25rem 0.35rem; font-weight: 800; border-radius: 6px; }
+  .tr-pool li.q-in { box-shadow: inset 3px 0 0 #16a34a; }
+  .tr-pool li.q-out { box-shadow: inset 3px 0 0 #c62828; }
+  .tr-pno { width: 1.4rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tr-pn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr-pp { color: var(--gold); font-size: 0.85rem; }
+
+  /* Bracket */
+  .tr-bracket { display: flex; gap: 0.75rem; overflow-x: auto; padding: 0.25rem 0 0.75rem; -webkit-overflow-scrolling: touch; margin-bottom: 0.5rem; }
+  .tr-round { flex: 0 0 168px; display: flex; flex-direction: column; justify-content: space-around; gap: 0.6rem; }
+  .tr-rname { text-align: center; font-weight: 900; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gold); }
+  .tr-bm { position: relative; display: block; width: 100%; min-height: 0; padding: 0; text-align: left; overflow: hidden; background: var(--surface); border: 1px solid var(--hair, var(--border)); border-radius: 12px; box-shadow: var(--shadow); }
+  .tr-bm.st-live { border-color: color-mix(in srgb, var(--danger) 60%, transparent); }
+  .tr-bl { display: flex; justify-content: space-between; gap: 0.4rem; padding: 0.45rem 0.6rem; font-weight: 800; font-size: 0.88rem; }
+  .tr-bl + .tr-bl { border-top: 1px solid var(--border); }
+  .tr-bl.win { color: var(--gold); }
+  .tr-bn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr-bf { font-weight: 900; font-variant-numeric: tabular-nums; }
+  .tr-live { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 0.55rem; font-weight: 900; letter-spacing: 0.08em; padding: 0.05rem 0.35rem; border-radius: 999px; background: var(--danger); color: #fff; }
+
+  /* Fixtures */
+  .tr-filter { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-bottom: 0.5rem; }
+  .tr-gh { margin: 1rem 0 0.4rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gold); }
+  .tr-fix { display: flex; flex-direction: column; gap: 0.45rem; }
+  .tr-frow {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 0.5rem;
+    width: 100%; padding: 0.7rem 0.8rem; text-align: left; border-radius: 14px;
+    background: linear-gradient(180deg, var(--card-hi), var(--card-lo)); border: 1px solid var(--hair, var(--border)); box-shadow: var(--shadow);
+  }
+  .tr-frow.st-live { border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+  .tr-fa, .tr-fb { font-weight: 800; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.2; }
+  .tr-fb { text-align: right; }
+  .tr-fa.win, .tr-fb.win { color: var(--gold); }
+  .tr-fs { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; min-width: 64px; }
+  .tr-fs b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .tr-pill { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+  .tr-pill.live { background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--minus); }
+  .tr-pill.done { background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold); }
+
+  /* Points table */
+  .tr-tw { max-height: none; }
+  .tr-table th, .tr-table td { text-align: center; padding: 0.5rem 0.35rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tr-table .l { text-align: left; }
+  .tr-table td.nm { font-weight: 800; max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
+  .tr-table td.pos { font-weight: 900; }
+  .tr-table th { letter-spacing: 0.02em; }
+  /* Pos + Player stay visible while the numbers scroll sideways */
+  .tr-table td { background: var(--panel, var(--surface)); }
+  .tr-table th { background: color-mix(in srgb, var(--gold) 14%, var(--panel, var(--surface))); }
+  .tr-table th:nth-child(-n+2), .tr-table td:nth-child(-n+2) { position: sticky; z-index: 1; }
+  .tr-table th:nth-child(1), .tr-table td:nth-child(1) { left: 0; }
+  .tr-table th:nth-child(2), .tr-table td:nth-child(2) { left: 1.9rem; box-shadow: 6px 0 6px -6px rgba(0,0,0,.25); }
+  .tr-table th:nth-child(1), .tr-table td:nth-child(1) { width: 1.9rem; min-width: 1.9rem; }
+  @media (max-width: 480px) {
+    .tr-table { font-size: 0.82rem; }
+    .tr-table th, .tr-table td { padding: 0.45rem 0.2rem; }
+    .tr-table td.nm { max-width: 5.8rem; }
+  }
+  .tr-table td.pts { font-weight: 900; color: var(--gold); }
+  .tr-table tr.q-in td.pos { box-shadow: inset 4px 0 0 #16a34a; }
+  .tr-table tr.q-out td.pos { box-shadow: inset 4px 0 0 #c62828; }
+  .pos-fd { color: var(--plus); }
+  .neg-fd { color: var(--minus); }
+  .tr-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 0.3rem; margin: 0.6rem 0 0; font-size: 0.8rem; color: var(--muted); }
+  .tr-key { margin-top: 0.75rem; }
+  .tr-key summary { cursor: pointer; font-weight: 800; color: var(--gold); }
+  .tr-key ul { padding-left: 1.1rem; margin: 0.5rem 0; }
+  .tr-key li { margin: 0.2rem 0; font-size: 0.9rem; }
+
+  /* Pop-ups */
+  #trm { z-index: 12; }
+  #trlogin { z-index: 13; }
+  .trm-modal, .trl-modal { max-width: 560px; }
+  .trl-modal { max-width: 420px; }
+  .trl-err { color: var(--minus); font-weight: 800; min-height: 1.2em; margin: 0.5rem 0; }
+  .tr-vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.5rem; margin: 0.5rem 0 1rem; }
+  .tr-vp { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; text-align: center; min-width: 0; }
+  .tr-vp b { font-size: 1.05rem; max-width: 100%; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.2; }
+  .tr-vp.win b, .tr-vp.win .tr-big { color: var(--gold); }
+  .tr-big { font-size: 2.6rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+  .tr-vmid { display: flex; flex-direction: column; align-items: center; font-weight: 900; color: var(--muted); }
+  .tr-frames { padding-left: 1.2rem; margin: 0 0 0.75rem; }
+  .tr-frames li { margin: 0.15rem 0; }
+  .tr-res { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .tr-res .tr-field { flex-direction: column; align-items: flex-start; }
+  .tr-res label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; margin: 0.6rem 0 0; }
+
+  /* Live scoring */
+  .trm-live { max-width: 620px; }
+  .tr-lps { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .tr-lp {
+    display: flex; flex-direction: column; align-items: center; gap: 0.15rem; min-width: 0; min-height: 0; padding: 0.7rem 0.5rem;
+    border-radius: 16px; background: var(--surface-2); border: 2px solid transparent !important;
+  }
+  .tr-lp.on { border-color: var(--gold) !important; background: color-mix(in srgb, var(--gold) 14%, var(--surface-2)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 22%, transparent); }
+  .tr-ln { max-width: 100%; font-weight: 900; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.15; text-align: center; }
+  .tr-lf { font-size: 0.7rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); }
+  .tr-ls { font-size: 3rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+  .tr-lb { font-size: 0.8rem; font-weight: 800; color: var(--muted); }
+  .tr-state { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.35rem 0.9rem; margin: 0.7rem 0; padding: 0.55rem 0.75rem; border-radius: 12px; background: var(--surface-2); font-size: 0.85rem; color: var(--muted); }
+  .tr-state b { color: var(--text); }
+  .tr-snk { width: 100%; text-align: center; color: var(--minus); font-weight: 900; }
+  .tr-balls { margin-bottom: 0.6rem; }
+  .tr-fouls { display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; gap: 0.4rem; margin-bottom: 0.6rem; }
+  .tr-fouls > span { grid-column: 1 / -1; }
+  .tr-fouls button { min-width: 0; }
+  .tr-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+  .tr-acts button { padding: 0.6rem 0.3rem; font-size: 0.85rem; }
+  .tr-fe { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+  .tr-fe p { margin: 0 0 0.2rem; text-align: center; font-weight: 900; }
+  @media (max-width: 480px) {
+    .tr-acts { grid-template-columns: 1fr 1fr; }
+    .tr-ls { font-size: 2.4rem; }
+    .tr-res { grid-template-columns: 1fr; }
+  }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -1132,6 +1371,14 @@
   <button type="button" class="item primary" data-act="end-turn"><span class="ico">⏭</span><span class="lbl">End turn</span></button>
   <button type="button" class="item" data-act="undo"><span class="ico">↶</span><span class="lbl">Undo</span></button>
 
+  <!-- Tournaments -->
+  <div class="menu-section">Tournaments</div>
+  <button type="button" class="item" data-act="tournaments"><span class="ico">🏆</span><span class="lbl">Tournament</span></button>
+  <button type="button" class="item" data-act="tr-pools"><span class="ico">🗂</span><span class="lbl">Brackets &amp; pools</span></button>
+  <button type="button" class="item" data-act="tr-fixtures"><span class="ico">📅</span><span class="lbl">Fixtures</span></button>
+  <button type="button" class="item" data-act="tr-table"><span class="ico">📊</span><span class="lbl">Points table</span></button>
+  <button type="button" class="item" data-act="tr-players"><span class="ico">👤</span><span class="lbl">Player database</span></button>
+
   <!-- Players & scores (Add player and History are on the top bar) -->
   <div class="menu-section">Game</div>
   <button type="button" class="item" data-act="change-players"><span class="ico">👥</span><span class="lbl">Change players</span></button>
@@ -1148,7 +1395,7 @@
   <button type="button" class="item danger" data-act="end-game" id="menu-end-game"><span class="ico">🏁</span><span class="lbl">End game</span></button>
 
   <div class="menu-foot">
-    <p class="muted small">Keyboard: 2–7 colours, R red, F foul 21, E end turn, U undo.</p>
+    <p class="muted small">Keyboard: 1–7 balls, R = 21, − / + switch mode, E end turn, U undo.</p>
     <p class="muted small" id="app-version"></p>
   </div>
 </nav>
@@ -1160,7 +1407,14 @@
       <!-- Scoring only: player colour, name and score -->
       <div class="avatar" id="sh-avatar" aria-hidden="true"></div>
       <div class="who">
-        <h2 id="sh-name"></h2>
+        <div class="sh-name-line">
+          <h2 id="sh-name"></h2>
+          <!-- + / − : choose whether the ball buttons add or subtract points -->
+          <div class="sign-toggle" role="group" aria-label="Add or subtract points">
+            <button type="button" id="sh-plus" class="sg plus" aria-pressed="true" aria-label="Add points">+</button>
+            <button type="button" id="sh-minus" class="sg minus" aria-pressed="false" aria-label="Subtract points">−</button>
+          </div>
+        </div>
         <div class="pmeta" id="sh-meta"></div>
       </div>
       <div class="sh-score" id="sh-score"></div>
@@ -1219,6 +1473,44 @@
       <button type="button" id="addp-cancel">Cancel</button>
     </div>
   </form>
+</div>
+
+<!-- ========== Tournament page ========== -->
+<div id="tour" class="tour hidden" role="dialog" aria-modal="true" aria-labelledby="tr-title">
+  <header class="topbar tr-bar">
+    <button type="button" class="icon-btn" id="tr-back" aria-label="Back to scoring">←</button>
+    <div class="title">
+      <h1 id="tr-title">Tournament</h1>
+      <div class="sub" id="tr-sub"></div>
+    </div>
+    <button type="button" class="icon-btn" id="tr-lock" aria-label="Admin login">🔒</button>
+  </header>
+  <nav class="tabs tr-tabs" id="tr-tabs" role="tablist" aria-label="Tournament sections"></nav>
+  <div class="tr-main" id="tr-main"></div>
+</div>
+
+<!-- ========== Tournament admin login ========== -->
+<div id="trlogin" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="trl-title">
+  <form class="modal trl-modal" id="trl-form" autocomplete="on">
+    <div class="modal-head">
+      <h2 id="trl-title">🏆 Tournament admin</h2>
+      <button type="button" class="ghost" id="trl-close" aria-label="Close">✕</button>
+    </div>
+    <label for="trl-user">Username</label>
+    <input type="text" id="trl-user" autocomplete="username" autocapitalize="none" spellcheck="false" />
+    <label for="trl-pass">Password</label>
+    <input type="password" id="trl-pass" autocomplete="current-password" />
+    <p class="trl-err" id="trl-err" role="alert"></p>
+    <div class="ask-actions">
+      <button type="button" class="ghost" id="trl-view">View only</button>
+      <button type="submit" class="primary">Log in</button>
+    </div>
+  </form>
+</div>
+
+<!-- ========== Tournament pop-up (match details, live scoring, forms) ========== -->
+<div id="trm" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="trm-title">
+  <div class="modal trm-modal" id="trm-modal"></div>
 </div>
 
 <!-- ========== Themed confirm (replaces the browser's plain OK/Cancel box) ========== -->
@@ -1308,16 +1600,17 @@
 (() => {
   // ================= Constants =================
   const BALLS = [
+    { name: "Red", value: 1, cls: "red1", key: "1" },
     { name: "Yellow", value: 2, cls: "yellow", key: "2" },
     { name: "Green", value: 3, cls: "green", key: "3" },
     { name: "Brown", value: 4, cls: "brown", key: "4" },
     { name: "Blue", value: 5, cls: "blue", key: "5" },
     { name: "Pink", value: 6, cls: "pink", key: "6" },
     { name: "Black", value: 7, cls: "black", key: "7" },
-    { name: "Red", value: 21, cls: "red", key: "r" },
+    { name: "Maroon", value: 21, cls: "maroon", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 25; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 29; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -1336,7 +1629,7 @@
   let state = load();
   let undoStack = [];
   let setup = defaultSetup();
-  const ui = { tab: "all", gain: null, modalOpen: true, sheet: false, mode: "add", dlg: null, dlgColor: null, lastFocus: null, sheetFocus: null, cp: null, editingName: null, hist: false, addp: null, bkp: false, final: null, ren: null };
+  const ui = { tab: "all", gain: null, modalOpen: true, sheet: false, mode: "add", dlg: null, dlgColor: null, lastFocus: null, sheetFocus: null, cp: null, editingName: null, hist: false, addp: null, bkp: false, final: null, ren: null, sign: 1, tour: false };
   let soundOn = safeGet(SOUND_KEY) !== "off";
 
   const $ = id => document.getElementById(id);
@@ -1586,6 +1879,25 @@
   };
   const addLog = entry => state.log.push({ n: state.log.length + 1, time: Date.now(), ...entry });
 
+  // Ball button: adds or subtracts depending on the +/− toggle in the scoring pop-up.
+  function scoreBall(value) {
+    if (ui.sign < 0) unpot(value); else pot(value);
+  }
+  // Subtract a ball's value from the player at the table (also removes it from the running break).
+  function unpot(value) {
+    if (!state || state.ended) return;
+    snapshot();
+    const p = state.players[state.current];
+    p.score -= value;
+    const bi = state.breakBalls.lastIndexOf(value);
+    if (bi !== -1) state.breakBalls.splice(bi, 1);
+    addLog({ type: "minus", player: state.current, value, ball: BALL_BY_VALUE[value].name, after: p.score });
+    ui.gain = { idx: state.current, text: `−${value}`, cls: "minus" };
+    sfx.minus(); buzz(20);
+    checkWinner(); // may take a finished player back below the target
+    save(); render();
+  }
+
   function pot(value) {
     if (!state || state.ended) return;
     snapshot();
@@ -1644,6 +1956,7 @@
 
   function endTurn() {
     if (!state || state.ended) return;
+    ui.sign = 1; // next player starts in + mode
     snapshot();
     closeBreak();
     state.current = nextPlayerIndex();
@@ -1739,8 +2052,16 @@
     openSheet();
   }
 
+  // + / − toggle in the scoring pop-up
+  function setSign(s) {
+    ui.sign = s < 0 ? -1 : 1;
+    render();
+  }
+  $("sh-plus").addEventListener("click", () => setSign(1));
+  $("sh-minus").addEventListener("click", () => setSign(-1));
+
   function openSheet() {
-    if (!ui.sheet) ui.sheetFocus = document.activeElement;
+    if (!ui.sheet) { ui.sheetFocus = document.activeElement; ui.sign = 1; } // always start in + mode
     ui.sheet = true;
     render();
     setTimeout(() => { if (ui.sheet) $("sh-close").focus({ preventScroll: true }); }, 30);
@@ -1918,23 +2239,14 @@
 
   // ================= Game rendering =================
   function buildPanel(i) {
-    const p = state.players[i];
     const next = state.players[nextPlayerIndex()];
+    const minus = ui.sign < 0;
     return el("div", { class: "ppanel" }, [
-      el("div", { class: "balls" }, BALLS.map(b => el("button", {
+      el("div", { class: "balls" + (minus ? " minus-mode" : "") }, BALLS.map(b => el("button", {
         type: "button", class: `ball ${b.cls}`, "data-fk": `ball-${b.value}`,
-        "aria-label": `Add ${b.name}, ${b.value} points`,
-        onclick: () => pot(b.value),
-      }, [el("span", { text: String(b.value) }), el("small", { text: b.name })]))),
-      el("div", { class: "foul-head" }, [
-        "Foul → points taken off ", el("b", { text: p.name }),
-      ]),
-      el("div", { class: "fouls" }, FOULS.map(v => el("button", {
-        type: "button", class: v === 21 ? "f21" : "", "data-fk": `foul-${v}`,
-        text: `−${v}`,
-        "aria-label": `Foul: take ${v} points from ${p.name}`,
-        onclick: () => foul(v),
-      }))),
+        "aria-label": `${minus ? "Subtract" : "Add"} ${b.value} point${b.value === 1 ? "" : "s"}`,
+        onclick: () => scoreBall(b.value),
+      }, [el("span", { text: (minus ? "−" : "") + b.value }), el("small", { text: b.name })]))),
       // Next player: hands the table on and keeps scoring open for them (finished players are skipped)
       el("button", {
         type: "button", class: "next-btn", "data-fk": "sheet-next",
@@ -1961,7 +2273,10 @@
     av.style.background = p.color;
     av.style.color = fg;
     $("sh-name").textContent = p.name;
-    $("sh-meta").textContent = breakTotal() > 0 ? `Break ${breakTotal()}` : "";
+    $("sh-plus").setAttribute("aria-pressed", String(ui.sign > 0));
+    $("sh-minus").setAttribute("aria-pressed", String(ui.sign < 0));
+    $("sh-modal").classList.toggle("minus-mode", ui.sign < 0);
+    $("sh-meta").textContent = ui.sign < 0 ? "Subtract mode" : breakTotal() > 0 ? `Break ${breakTotal()}` : "";
     const sc = $("sh-score");
     sc.textContent = String(p.score);
     sc.classList.remove("bump");
@@ -2057,6 +2372,9 @@
         ptsCls = "pts-foul"; ptsText = `+${e.value}`;
       } else if (e.type === "penalty") {
         how = el("td", {}, [foulBall(e.value), " ", el("span", { class: "tag foul-tag", text: `FOUL ${e.value}` })]);
+        ptsCls = "pts-minus"; ptsText = `−${e.value}`;
+      } else if (e.type === "minus") {
+        how = el("td", {}, [miniBall(e.value), " ", el("span", { class: "tag adj-tag", text: "−" }), ` ${e.ball}`]);
         ptsCls = "pts-minus"; ptsText = `−${e.value}`;
       } else if (e.type === "reset") {
         how = el("td", {}, [el("span", { class: "tag adj-tag", text: "↺ RESET" }), " to 0"]);
@@ -2386,7 +2704,7 @@
     const show = state.ended && ui.modalOpen;
     $("winner").classList.toggle("hidden", !show);
     $("gameover-banner").classList.toggle("hidden", !state.ended);
-    document.body.classList.toggle("lock", show || !!askResolve || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || ui.ren !== null || (ui.sheet && !state.ended));
+    document.body.classList.toggle("lock", show || !!askResolve || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || ui.ren !== null || ui.tour || (ui.sheet && !state.ended));
     if (!state.ended) return;
     paintResults(state);
     $("play-again").textContent = "Play again";
@@ -2437,7 +2755,7 @@
     $("game").classList.toggle("hidden", !inGame);
     document.querySelectorAll("#drawer [data-act]").forEach(b => {
       // Settings and Backup (restore) are available on the setup screen too.
-      if (!["sound", "wake", "backup"].includes(b.dataset.act)) b.disabled = !inGame;
+      if (!["sound", "wake", "backup", "tournaments"].includes(b.dataset.act) && !b.dataset.act.startsWith("tr-")) b.disabled = !inGame;
     });
 
     // Top bar: Add player only during a game; History always (Past games works from setup too).
@@ -2450,7 +2768,7 @@
       $("addp").classList.add("hidden");
       $("ren").classList.add("hidden");
       renderHistory(); // Past games only
-      document.body.classList.toggle("lock", ui.bkp || ui.hist);
+      document.body.classList.toggle("lock", ui.bkp || ui.hist || ui.tour);
       $("subtitle").textContent = "Set up your game";
       // After End game: show the frozen final scores; data is already cleared.
       $("winner").classList.toggle("hidden", !ui.final);
@@ -2722,13 +3040,13 @@
       if (state && state.ended && ui.modalOpen) { ui.modalOpen = false; renderResults(); }
       return;
     }
-    if (!state || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || ui.ren !== null || drawerOpen() || e.target.tagName === "INPUT") return;
+    if (!state || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || ui.ren !== null || drawerOpen() || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName || "")) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     const ball = BALL_BY_KEY[k];
-    if (ball) pot(ball.value);
-    else if (k === "f") foul(21);
+    if (ball) scoreBall(ball.value);
+    else if (k === "-" || k === "+" || k === "=") setSign(k === "-" ? -1 : 1);
     else if (k === "e") endTurn();
     else if (k === "u") undo();
   });
@@ -2782,8 +3100,8 @@
     };
     const rows = [["#", "Time", "Player", "Type", "Detail", "Points", "Score after"]];
     state.log.forEach(e => {
-      const detail = e.type === "foul" ? `Foul by ${state.players[e.by].name}` : e.type === "penalty" ? `Foul ${e.value}` : e.type === "adjust" ? "Manual" : e.type === "reset" ? "Reset to 0" : e.ball;
-      const pts = e.type === "penalty" || e.type === "reset" ? -e.value : e.value;
+      const detail = e.type === "foul" ? `Foul by ${state.players[e.by].name}` : e.type === "penalty" ? `Foul ${e.value}` : e.type === "adjust" ? "Manual" : e.type === "reset" ? "Reset to 0" : e.type === "minus" ? `Minus ${e.ball}` : e.ball;
+      const pts = e.type === "penalty" || e.type === "reset" || e.type === "minus" ? -e.value : e.value;
       rows.push([e.n, new Date(e.time).toISOString(), state.players[e.player].name, e.type, detail, pts, e.after]);
     });
     const csv = rows.map(r => r.map(cell).join(",")).join("\r\n");
@@ -2854,6 +3172,7 @@
         if (!FOULS.includes(e.value)) fail("bad penalty");
         return { n: e.n, time: e.time, type: "penalty", player: e.player, value: e.value, ball: "Foul", after: e.after };
       }
+      if (e.type === "minus") return { n: e.n, time: e.time, type: "minus", player: e.player, value: ballVal(e.value), ball: BALL_BY_VALUE[e.value].name, after: e.after };
       if (e.type === "reset") {
         if (!isInt(e.value, -1e6, 1e6) || e.after !== 0) fail("bad reset");
         return { n: e.n, time: e.time, type: "reset", player: e.player, value: e.value, ball: "Reset", after: 0 };
@@ -2991,6 +3310,1394 @@
   }
 
   $("app-version").textContent = `App version ${APP_VERSION}`;
+
+  // =====================================================================
+  // TOURNAMENT — admin login, setup, pools, fixtures, live scoring, points table, bracket
+  // Everything is stored on this device (localStorage) and only removed by the admin.
+  // =====================================================================
+  const TOUR_KEY = "snooker-century-tournaments-v1";
+  const ADMIN_KEY = "snooker-century-admin-v1";
+  const ADMIN_SESSION = "snooker-century-admin-session";
+  // Default login: admin / Admin@123 — only a hash is stored. Change it in Tournament → Setup → Admin.
+  const ADMIN_DEFAULT = { user: "admin", hash: "c432fcc378f13839fa8ccaaed8e6b3477f6860eb79d6ff9db715c97a2257ed40" };
+  const POOLS = "ABCDEFGH".split("");
+  const SNK = [
+    { v: 1, n: "Red", c: "red1" }, { v: 2, n: "Yellow", c: "yellow" }, { v: 3, n: "Green", c: "green" },
+    { v: 4, n: "Brown", c: "brown" }, { v: 5, n: "Blue", c: "blue" }, { v: 6, n: "Pink", c: "pink" }, { v: 7, n: "Black", c: "black" },
+  ];
+  const COLOUR_NAMES = ["Yellow", "Green", "Brown", "Blue", "Pink", "Black"];
+  const tId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const ID_RE = /^[\w-]{1,40}$/;
+
+  // ---------- SHA-256 (small pure-JS version so login works offline and on file://) ----------
+  function sha256hex(ascii) {
+    const rr = (v, a) => (v >>> a) | (v << (32 - a));
+    const maxWord = 2 ** 32, words = [], bitLen = ascii.length * 8;
+    const hash = [], k = [];
+    const composite = {};
+    for (let cand = 2, n = 0; n < 64; cand++) {
+      if (composite[cand]) continue;
+      for (let i = 0; i < 313; i += cand) composite[i] = cand;
+      hash[n] = (cand ** 0.5 * maxWord) | 0;
+      k[n++] = (cand ** (1 / 3) * maxWord) | 0;
+    }
+    let h = hash.slice(0, 8);
+    ascii += "\x80";
+    while (ascii.length % 64 - 56) ascii += "\x00";
+    for (let i = 0; i < ascii.length; i++) {
+      const j = ascii.charCodeAt(i);
+      if (j >> 8) return "";
+      words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    words[words.length] = (bitLen / maxWord) | 0;
+    words[words.length] = bitLen;
+    for (let j = 0; j < words.length;) {
+      const w = words.slice(j, (j += 16));
+      const old = h;
+      h = h.slice(0, 8);
+      for (let i = 0; i < 64; i++) {
+        const w15 = w[i - 15], w2 = w[i - 2], a = h[0], e = h[4];
+        const t1 = h[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & h[5]) ^ (~e & h[6])) + k[i] +
+          (w[i] = i < 16 ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
+        const t2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & h[1]) ^ (a & h[2]) ^ (h[1] & h[2]));
+        h = [(t1 + t2) | 0].concat(h);
+        h[4] = (h[4] + t1) | 0;
+      }
+      for (let i = 0; i < 8; i++) h[i] = (h[i] + old[i]) | 0;
+    }
+    let out = "";
+    for (let i = 0; i < 8; i++) for (let j = 3; j + 1; j--) { const b = (h[i] >> (j * 8)) & 255; out += (b < 16 ? "0" : "") + b.toString(16); }
+    return out;
+  }
+  const credHash = (u, p) => sha256hex(unescape(encodeURIComponent(`snooker-century:${u}:${p}`)));
+  function adminCreds() {
+    try {
+      const c = JSON.parse(localStorage.getItem(ADMIN_KEY) || "null");
+      if (c && typeof c.user === "string" && /^[0-9a-f]{64}$/.test(c.hash)) return c;
+    } catch (_) { /* fall through */ }
+    return ADMIN_DEFAULT;
+  }
+
+  // ---------- Storage + validation (imported files are untrusted) ----------
+  const int = (v, lo, hi, d) => (Number.isInteger(v) && v >= lo && v <= hi ? v : d);
+  function cleanLive(L) {
+    if (!L || typeof L !== "object") return null;
+    return {
+      sa: int(L.sa, -2000, 2000, 0), sb: int(L.sb, -2000, 2000, 0), turn: L.turn === "b" ? "b" : "a",
+      brk: int(L.brk, 0, 1000, 0), reds: int(L.reds, 0, 15, 15), free: L.free === true, ci: int(L.ci, 0, 6, 0),
+    };
+  }
+  function cleanMatch(m, pid) {
+    if (!m || typeof m.id !== "string" || !ID_RE.test(m.id)) return null;
+    return {
+      id: m.id, stage: m.stage === "ko" ? "ko" : "pool",
+      pool: int(m.pool, 0, 7, 0), round: int(m.round, 0, 500, 0),
+      a: pid(m.a), b: pid(m.b),
+      fa: int(m.fa, 0, 11, 0), fb: int(m.fb, 0, 11, 0),
+      hbA: int(m.hbA, 0, 1000, 0), hbB: int(m.hbB, 0, 1000, 0),
+      status: ["pending", "live", "done", "bye"].includes(m.status) ? m.status : "pending",
+      frameLog: Array.isArray(m.frameLog) ? m.frameLog.slice(0, 11).map(f => ({
+        a: int(f && f.a, -2000, 2000, 0), b: int(f && f.b, -2000, 2000, 0), w: f && (f.w === "a" || f.w === "b") ? f.w : null,
+      })) : [],
+      live: cleanLive(m.live),
+    };
+  }
+  function sanitizeTour(t) {
+    if (!t || typeof t !== "object" || typeof t.id !== "string" || !ID_RE.test(t.id)) return null;
+    const players = (Array.isArray(t.players) ? t.players : [])
+      .filter(p => p && typeof p.id === "string" && ID_RE.test(p.id) && typeof p.name === "string")
+      .slice(0, 64).map(p => ({ id: p.id, name: cleanName(p.name, "PLAYER"), fee: p.fee === "paid" ? "paid" : "unpaid" }));
+    const ids = new Set(players.map(p => p.id));
+    const pid = v => (typeof v === "string" && ids.has(v) ? v : null);
+    const matches = (Array.isArray(t.matches) ? t.matches : []).slice(0, 3000).map(m => cleanMatch(m, pid)).filter(Boolean);
+    const mids = new Set(matches.map(m => m.id));
+    return {
+      id: t.id, name: (typeof t.name === "string" && t.name.trim() ? t.name.trim() : "Tournament").slice(0, 40),
+      created: Number.isFinite(t.created) ? t.created : Date.now(),
+      updated: Number.isFinite(t.updated) ? t.updated : Date.now(),
+      format: t.format === "drr" ? "drr" : "srr",
+      poolCount: int(t.poolCount, 1, 4, 1), frames: int(t.frames, 1, 10, 3),
+      ptsWin: int(t.ptsWin, 1, 5, 3), ptsDraw: int(t.ptsDraw, 0, 3, 1),
+      qualify: int(t.qualify, 0, 4, 0),
+      players,
+      pools: (Array.isArray(t.pools) ? t.pools : []).slice(0, 4).map(pl => (Array.isArray(pl) ? pl.map(pid).filter(Boolean) : [])),
+      matches,
+      ko: (Array.isArray(t.ko) ? t.ko : []).slice(0, 7).map(r => (Array.isArray(r) ? r.filter(id => typeof id === "string" && mids.has(id)) : [])),
+      stage: ["setup", "groups", "ko", "done"].includes(t.stage) ? t.stage : "setup",
+      demo: t.demo === true,
+    };
+  }
+  function loadTours() {
+    try {
+      const a = JSON.parse(localStorage.getItem(TOUR_KEY) || "[]");
+      return Array.isArray(a) ? a.map(sanitizeTour).filter(Boolean) : [];
+    } catch (_) { return []; }
+  }
+  let tours = loadTours();
+  function saveTours() {
+    try { localStorage.setItem(TOUR_KEY, JSON.stringify(tours)); }
+    catch (_) { toast("⚠️ Couldn't save — phone storage is full"); }
+  }
+
+  // ---------- Player database (shared by all tournaments on this device) ----------
+  const PDB_KEY = "snooker-century-players-v1";
+  const normPhone = v => { const t = String(v || "").trim(); const d = t.replace(/\D/g, ""); return d ? (t.startsWith("+") ? "+" : "") + d : ""; };
+  const validPhone = v => /^\+?\d{7,15}$/.test(v);
+  const PID_RE = /^\d{5}$/;
+  function loadDb() {
+    try {
+      const a = JSON.parse(localStorage.getItem(PDB_KEY) || "[]");
+      if (!Array.isArray(a)) return [];
+      const ids = new Set(), phones = new Set(), out = [];
+      a.slice(0, 5000).forEach(x => {
+        if (!x || typeof x.id !== "string" || !PID_RE.test(x.id) || ids.has(x.id) || typeof x.name !== "string") return;
+        let ph = normPhone(x.phone);
+        if (!validPhone(ph) || phones.has(ph)) ph = "";
+        ids.add(x.id); if (ph) phones.add(ph);
+        out.push({ id: x.id, name: cleanName(x.name, "PLAYER"), phone: ph, created: Number.isFinite(x.created) ? x.created : Date.now(), demo: x.demo === true });
+      });
+      return out;
+    } catch (_) { return []; }
+  }
+  let pdb = loadDb();
+  function saveDb() {
+    try { localStorage.setItem(PDB_KEY, JSON.stringify(pdb)); }
+    catch (_) { toast("⚠️ Couldn't save — phone storage is full"); }
+  }
+  const dbById = id => pdb.find(p => p.id === id) || null;
+  const dbByPhone = ph => (ph ? pdb.find(p => p.phone === ph) || null : null);
+  function newPlayerId() {
+    const used = new Set(pdb.map(p => p.id));
+    for (let i = 0; i < 5000; i++) {
+      const r = window.crypto && crypto.getRandomValues ? crypto.getRandomValues(new Uint32Array(1))[0] : Math.floor(Math.random() * 2 ** 32);
+      const id = String(10000 + (r % 90000));
+      if (!used.has(id)) return id;
+    }
+    return null;
+  }
+  // Checks a name + phone for a new or edited player. Returns { name, phone } or { error, clash }.
+  function checkPlayer(nameRaw, phoneRaw, selfId) {
+    const name = cleanName(nameRaw, "");
+    if (!name) return { error: "Enter the player's name." };
+    const phone = normPhone(phoneRaw);
+    if (!validPhone(phone)) return { error: "Enter a valid phone number (7–15 digits, + allowed)." };
+    const clash = dbByPhone(phone);
+    if (clash && clash.id !== selfId) return { error: `This phone number is already registered to ${clash.name} (ID ${clash.id}).`, clash };
+    return { name, phone };
+  }
+  function registerPlayer(name, phone) {
+    const id = newPlayerId();
+    if (!id) { toast("⚠️ Player database is full"); return null; }
+    const p = { id, name, phone, created: Date.now() };
+    pdb.push(p); saveDb();
+    return p;
+  }
+  const maskPhone = ph => (ph ? "•••• " + ph.slice(-3) : "—");
+
+  // Who won a tournament (knockout final, or the league table when there is one pool and no knockout)
+  function tourChampion(t) {
+    if (t.ko.length) { const f = byId(t, t.ko[t.ko.length - 1][0]); return f ? winnerOf(f) : null; }
+    if (!t.qualify && t.pools.length === 1 && t.matches.length && poolsDone(t)) { const st = standings(t, 0); return st[0] ? st[0].id : null; }
+    return null;
+  }
+  function playerStats(id) {
+    const s = { tours: 0, titles: 0, mp: 0, w: 0, d: 0, l: 0, fw: 0, fl: 0, hb: 0, hs: 0, paid: 0, history: [] };
+    tours.forEach(t => {
+      const tp = t.players.find(p => p.id === id);
+      if (!tp) return;
+      s.tours++;
+      if (tp.fee === "paid") s.paid++;
+      const h = { id: t.id, name: t.name, mp: 0, w: 0, d: 0, l: 0, fee: tp.fee, champ: false };
+      t.matches.forEach(m => {
+        if (m.a !== id && m.b !== id) return;
+        const me = m.a === id ? "a" : "b";
+        s.hb = Math.max(s.hb, me === "a" ? m.hbA : m.hbB);
+        m.frameLog.forEach(f => { s.hs = Math.max(s.hs, me === "a" ? f.a : f.b); });
+        if (m.status !== "done" || !m.a || !m.b) return;
+        const mine = me === "a" ? m.fa : m.fb, theirs = me === "a" ? m.fb : m.fa;
+        s.mp++; h.mp++; s.fw += mine; s.fl += theirs;
+        if (mine > theirs) { s.w++; h.w++; } else if (mine < theirs) { s.l++; h.l++; } else { s.d++; h.d++; }
+      });
+      if (tourChampion(t) === id) { s.titles++; h.champ = true; }
+      s.history.push(h);
+    });
+    return s;
+  }
+
+  const tu = {
+    open: false, tab: "setup", cur: null, poolTab: 0, fixFilter: "all",
+    admin: (() => { try { return sessionStorage.getItem(ADMIN_SESSION) === "1"; } catch (_) { return false; } })(),
+    modal: null,      // { kind: "match" | "live" | "result" | "pw", mid }
+    undo: [], frameEnd: false, loginNext: null, addFee: "unpaid", dbq: "",
+  };
+  const curT = () => tours.find(t => t.id === tu.cur) || null;
+  const touch = t => { t.updated = Date.now(); saveTours(); };
+  const pname = (t, id) => (dbById(id) || t.players.find(p => p.id === id) || { name: "TBD" }).name;
+  const byId = (t, id) => t.matches.find(m => m.id === id);
+  const need = t => Math.floor(t.frames / 2) + 1;
+  const poolName = (i, t) => (t && t.pools.length === 1 ? "League" : `Pool ${POOLS[i] || i + 1}`);
+
+  // ---------- Rules ----------
+  function winnerOf(m) {
+    if (m.status === "bye") return m.a || m.b;
+    if (m.status !== "done") return null;
+    return m.fa > m.fb ? m.a : m.fb > m.fa ? m.b : null;
+  }
+  function matchDecided(t, m) {
+    const n = need(t);
+    if (Math.max(m.fa, m.fb) >= n) return true;
+    return m.stage === "pool" && m.fa + m.fb >= t.frames; // draws only possible with an even number of frames
+  }
+  function validResult(t, stage, fa, fb) {
+    const n = need(t);
+    if (fa < 0 || fb < 0) return "Frames can't be negative.";
+    if (Math.max(fa, fb) > n) return `Nobody can win more than ${n} frames (best of ${t.frames}).`;
+    if (Math.max(fa, fb) === n && Math.min(fa, fb) < n) return "";
+    if (stage === "pool" && fa === fb && fa + fb === t.frames) return "";
+    if (stage === "ko") return `Knockout matches need a winner: first to ${n} frames.`;
+    return `One player must reach ${n} frames${t.frames % 2 === 0 ? `, or ${t.frames / 2}–${t.frames / 2} for a draw` : ""}.`;
+  }
+  function resetMatch(m) {
+    Object.assign(m, { fa: 0, fb: 0, hbA: 0, hbB: 0, frameLog: [], live: null, status: m.a && m.b ? "pending" : "pending" });
+  }
+
+  // Round robin pairings (circle method). Returns rounds of [a, b].
+  function rrRounds(ids) {
+    const list = ids.slice();
+    if (list.length % 2) list.push(null);
+    const n = list.length, rounds = [];
+    for (let r = 0; r < n - 1; r++) {
+      const pairs = [];
+      for (let i = 0; i < n / 2; i++) {
+        const a = list[i], b = list[n - 1 - i];
+        if (a && b) pairs.push(r % 2 ? [b, a] : [a, b]);
+      }
+      rounds.push(pairs);
+      list.splice(1, 0, list.pop());
+    }
+    return rounds;
+  }
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  const MIN_POOL = 4;
+  // Pools are only allowed with more than 8 players; each pool needs at least 4 players; max 4 pools (A–D).
+  const maxPools = n => (n > 8 ? Math.min(4, Math.floor(n / MIN_POOL)) : 1);
+  const poolsFor = t => Math.max(1, Math.min(t.poolCount, maxPools(t.players.length)));
+  function shufflePools(t) {
+    const P = poolsFor(t);
+    t.poolCount = P;
+    t.pools = Array.from({ length: P }, () => []);
+    shuffle(t.players.map(p => p.id)).forEach((id, i) => t.pools[i % P].push(id));
+  }
+  function generateFixtures(t) {
+    if (t.players.length < 2) return "Add at least 2 players.";
+    t.poolCount = poolsFor(t);
+    const placed = new Set(t.pools.flat());
+    if (t.pools.length !== t.poolCount || t.players.some(p => !placed.has(p.id)) || t.pools.flat().length !== t.players.length || (t.poolCount > 1 && t.pools.some(p => p.length < MIN_POOL))) shufflePools(t);
+    t.matches = []; t.ko = [];
+    t.pools.forEach((ids, pi) => {
+      const rounds = rrRounds(ids);
+      const legs = t.format === "drr" ? [rounds, rounds.map(r => r.map(([a, b]) => [b, a]))] : [rounds];
+      let rn = 0;
+      legs.forEach(leg => leg.forEach(pairs => {
+        rn++;
+        pairs.forEach(([a, b]) => t.matches.push({ id: tId(), stage: "pool", pool: pi, round: rn, a, b, fa: 0, fb: 0, hbA: 0, hbB: 0, status: "pending", frameLog: [], live: null }));
+      }));
+    });
+    t.stage = "groups";
+    return "";
+  }
+
+  // ---------- Points table (Pts → FD → FW → head-to-head → HB) ----------
+  function standings(t, pi) {
+    const ids = t.pools[pi] || [];
+    const rows = new Map(ids.map(id => [id, { id, name: pname(t, id), mp: 0, w: 0, d: 0, l: 0, fw: 0, fl: 0, hb: 0, pts: 0 }]));
+    const ms = t.matches.filter(m => m.stage === "pool" && m.pool === pi);
+    ms.forEach(m => {
+      const A = rows.get(m.a), B = rows.get(m.b);
+      if (!A || !B) return;
+      A.hb = Math.max(A.hb, m.hbA); B.hb = Math.max(B.hb, m.hbB);
+      if (m.status !== "done") return;
+      A.mp++; B.mp++;
+      A.fw += m.fa; A.fl += m.fb; B.fw += m.fb; B.fl += m.fa;
+      if (m.fa > m.fb) { A.w++; B.l++; A.pts += t.ptsWin; }
+      else if (m.fb > m.fa) { B.w++; A.l++; B.pts += t.ptsWin; }
+      else { A.d++; B.d++; A.pts += t.ptsDraw; B.pts += t.ptsDraw; }
+    });
+    const list = [...rows.values()].map(r => ({ ...r, fd: r.fw - r.fl }));
+    const base = (x, y) => y.pts - x.pts || y.fd - x.fd || y.fw - x.fw;
+    list.sort(base);
+    const out = [];
+    for (let i = 0; i < list.length;) {
+      let j = i + 1;
+      while (j < list.length && base(list[i], list[j]) === 0) j++;
+      const grp = list.slice(i, j);
+      if (grp.length > 1) {
+        const set = new Set(grp.map(g => g.id)), h2h = new Map(grp.map(g => [g.id, 0]));
+        ms.forEach(m => {
+          if (m.status !== "done" || !set.has(m.a) || !set.has(m.b)) return;
+          if (m.fa > m.fb) h2h.set(m.a, h2h.get(m.a) + t.ptsWin);
+          else if (m.fb > m.fa) h2h.set(m.b, h2h.get(m.b) + t.ptsWin);
+          else { h2h.set(m.a, h2h.get(m.a) + t.ptsDraw); h2h.set(m.b, h2h.get(m.b) + t.ptsDraw); }
+        });
+        grp.sort((x, y) => h2h.get(y.id) - h2h.get(x.id) || y.hb - x.hb || x.name.localeCompare(y.name));
+      }
+      out.push(...grp);
+      i = j;
+    }
+    return out;
+  }
+
+  // ---------- Knockout bracket ----------
+  function bracketOrder(size) {
+    let o = [1];
+    while (o.length < size) { const n = o.length * 2; o = o.flatMap(s => [s, n + 1 - s]); }
+    return o;
+  }
+  const poolsDone = t => t.matches.filter(m => m.stage === "pool").every(m => m.status === "done");
+  function generateKO(t) {
+    if (!t.qualify) return "This tournament has no knockout stage (qualifiers = 0).";
+    if (!poolsDone(t)) return "Finish all pool matches first.";
+    const tables = t.pools.map((_, pi) => standings(t, pi));
+    const seeds = [];
+    for (let r = 0; r < t.qualify; r++) {
+      const order = tables.map((_, pi) => pi);
+      if (r % 2) order.reverse();
+      order.forEach(pi => { if (tables[pi][r]) seeds.push({ id: tables[pi][r].id, pool: pi }); });
+    }
+    if (seeds.length < 2) return "Need at least 2 qualifiers for a knockout.";
+    let S = 2;
+    while (S < seeds.length) S *= 2;
+    const slots = bracketOrder(S).map(s => seeds[s - 1] || null);
+    // Avoid two players from the same pool meeting in the first round where possible.
+    for (let k = 0; k < S / 2; k++) {
+      const x = slots[2 * k], y = slots[2 * k + 1];
+      if (!x || !y || x.pool !== y.pool) continue;
+      for (let k2 = 0; k2 < S / 2; k2++) {
+        if (k2 === k) continue;
+        const x2 = slots[2 * k2], y2 = slots[2 * k2 + 1];
+        if (y2 && x.pool !== y2.pool && (!x2 || x2.pool !== y.pool)) { slots[2 * k + 1] = y2; slots[2 * k2 + 1] = y; break; }
+      }
+    }
+    t.matches = t.matches.filter(m => m.stage !== "ko");
+    t.ko = [];
+    for (let r = 0, size = S; size >= 2; r++, size /= 2) {
+      const round = [];
+      for (let j = 0; j < size / 2; j++) {
+        const a = r === 0 ? (slots[2 * j] && slots[2 * j].id) || null : null;
+        const b = r === 0 ? (slots[2 * j + 1] && slots[2 * j + 1].id) || null : null;
+        const m = { id: tId(), stage: "ko", pool: 0, round: r, a, b, fa: 0, fb: 0, hbA: 0, hbB: 0, status: r === 0 && (!a || !b) ? "bye" : "pending", frameLog: [], live: null };
+        t.matches.push(m);
+        round.push(m.id);
+      }
+      t.ko.push(round);
+    }
+    t.stage = "ko";
+    propagateKO(t);
+    return "";
+  }
+  function propagateKO(t) {
+    for (let r = 0; r < t.ko.length - 1; r++) {
+      t.ko[r].forEach((id, j) => {
+        const m = byId(t, id), nx = byId(t, t.ko[r + 1][j >> 1]);
+        if (!m || !nx) return;
+        const side = j % 2 ? "b" : "a", w = winnerOf(m);
+        if (nx[side] !== w) { nx[side] = w; if (nx.status !== "pending") resetMatch(nx); }
+      });
+    }
+    const final = t.ko.length ? byId(t, t.ko[t.ko.length - 1][0]) : null;
+    if (t.ko.length) t.stage = final && final.status === "done" ? "done" : "ko";
+  }
+  const roundName = (count) => (count === 1 ? "Final" : count === 2 ? "Semi-finals" : count === 4 ? "Quarter-finals" : `Round of ${count * 2}`);
+
+  // ---------- Live scoring & table state ----------
+  function pointsRemaining(L) {
+    if (L.reds > 0) return L.reds * 8 + (L.free ? 7 : 0) + 27;
+    if (L.free) return 34;
+    return [2, 3, 4, 5, 6, 7].slice(L.ci).reduce((a, b) => a + b, 0);
+  }
+  function onBall(L) {
+    if (L.reds > 0 && !L.free) return "Red";
+    if (L.free) return "Colour";
+    return L.ci < 6 ? COLOUR_NAMES[L.ci] : "Table cleared";
+  }
+  function liveStart(t, m) {
+    if (!m.live) m.live = { sa: 0, sb: 0, turn: (m.fa + m.fb) % 2 ? "b" : "a", brk: 0, reds: 15, free: false, ci: 0 };
+    m.status = "live";
+    tu.undo = [];
+    tu.frameEnd = false;
+    touch(t);
+  }
+  function liveSnap(m) {
+    tu.undo.push(JSON.stringify({ live: m.live, hbA: m.hbA, hbB: m.hbB }));
+    if (tu.undo.length > 200) tu.undo.shift();
+  }
+  function livePot(t, m, v) {
+    const L = m.live;
+    liveSnap(m);
+    if (v === 1) { if (L.reds > 0) { L.reds--; L.free = true; } }
+    else if (L.free) L.free = false;
+    else if (L.reds === 0 && L.ci < 6 && v === L.ci + 2) L.ci++;
+    if (L.turn === "a") L.sa += v; else L.sb += v;
+    L.brk += v;
+    if (L.turn === "a") m.hbA = Math.max(m.hbA, L.brk); else m.hbB = Math.max(m.hbB, L.brk);
+    sfx.pot(v); buzz(12);
+    if (L.brk >= 100 && L.brk - v < 100) toast(`💯 Century break for ${pname(t, L.turn === "a" ? m.a : m.b)}!`);
+    touch(t);
+  }
+  function liveFoul(t, m, v) {
+    const L = m.live;
+    liveSnap(m);
+    if (L.turn === "a") L.sb += v; else L.sa += v; // foul points go to the opponent
+    L.brk = 0; L.free = false;
+    L.turn = L.turn === "a" ? "b" : "a";
+    sfx.foul(); buzz([30, 30, 30]);
+    touch(t);
+  }
+  function liveSwitch(t, m) {
+    const L = m.live;
+    liveSnap(m);
+    L.brk = 0; L.free = false;
+    L.turn = L.turn === "a" ? "b" : "a";
+    sfx.turn();
+    touch(t);
+  }
+  function liveRedOff(t, m) {
+    const L = m.live;
+    if (L.reds <= 0) return;
+    liveSnap(m);
+    L.reds--;
+    touch(t);
+  }
+  function liveUndo(t, m) {
+    const s = tu.undo.pop();
+    if (!s) return;
+    const o = JSON.parse(s);
+    m.live = o.live; m.hbA = o.hbA; m.hbB = o.hbB;
+    touch(t);
+  }
+  function liveFrameWon(t, m, side) {
+    const L = m.live;
+    m.frameLog.push({ a: L.sa, b: L.sb, w: side });
+    if (side === "a") m.fa++; else m.fb++;
+    tu.undo = []; tu.frameEnd = false;
+    if (matchDecided(t, m)) {
+      m.live = null;
+      m.status = "done";
+      const w = winnerOf(m);
+      toast(w ? `🏆 ${pname(t, w)} wins ${Math.max(m.fa, m.fb)}–${Math.min(m.fa, m.fb)}` : `🤝 Draw ${m.fa}–${m.fb}`);
+      sfx.win();
+      if (m.stage === "ko") propagateKO(t);
+      touch(t);
+      return true;
+    }
+    m.live = { sa: 0, sb: 0, turn: (m.fa + m.fb) % 2 ? "b" : "a", brk: 0, reds: 15, free: false, ci: 0 };
+    toast(`Frame to ${pname(t, side === "a" ? m.a : m.b)} · ${m.fa}–${m.fb}`);
+    touch(t);
+    return false;
+  }
+
+  // ---------- Page open/close ----------
+  function openTournaments() {
+    tu.tab = "setup";
+    if (tu.admin) return showTour();
+    openLogin(() => showTour());
+  }
+  // Brackets & pools, Fixtures, Points table and Player database open straight away (view only unless logged in).
+  const openTourTab = tab => () => { tu.tab = tab; showTour(); };
+  function showTour() {
+    tours = loadTours(); pdb = loadDb();
+    if (!curT()) tu.cur = tours.length ? tours[0].id : null;
+    tu.open = true; ui.tour = true;
+    $("tour").classList.remove("hidden");
+    document.body.classList.add("lock");
+    renderTour();
+    setTimeout(() => $("tr-back").focus({ preventScroll: true }), 30);
+  }
+  function hideTour() {
+    tu.open = false; ui.tour = false;
+    closeTrm();
+    $("tour").classList.add("hidden");
+    render();
+  }
+  function openLogin(next) {
+    tu.loginNext = next || null;
+    $("trl-user").value = "";
+    $("trl-pass").value = "";
+    $("trl-err").textContent = "";
+    $("trlogin").classList.remove("hidden");
+    document.body.classList.add("lock");
+    setTimeout(() => $("trl-user").focus(), 30);
+  }
+  function closeLogin() {
+    $("trlogin").classList.add("hidden");
+    if (!tu.open) render();
+  }
+  function setAdmin(on) {
+    tu.admin = on;
+    try { if (on) sessionStorage.setItem(ADMIN_SESSION, "1"); else sessionStorage.removeItem(ADMIN_SESSION); } catch (_) {}
+  }
+  $("trl-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const u = $("trl-user").value.trim().toLowerCase(), p = $("trl-pass").value;
+    const c = adminCreds();
+    if (u === c.user && credHash(u, p) === c.hash) {
+      setAdmin(true);
+      $("trl-pass").value = "";
+      closeLogin();
+      toast("🔓 Logged in as admin");
+      const next = tu.loginNext; tu.loginNext = null;
+      if (next) next(); else if (tu.open) renderTour();
+    } else {
+      $("trl-err").textContent = "Wrong username or password.";
+      $("trl-pass").value = "";
+      $("trl-pass").focus();
+      buzz([40, 40]);
+    }
+  });
+  $("trl-view").addEventListener("click", () => { closeLogin(); if (!tu.open) showTour(); else renderTour(); });
+  $("trl-close").addEventListener("click", closeLogin);
+  $("trlogin").addEventListener("click", e => { if (e.target.id === "trlogin") closeLogin(); });
+  $("tr-back").addEventListener("click", hideTour);
+  $("tr-lock").addEventListener("click", async () => {
+    if (!tu.admin) return openLogin(null);
+    const okGo = await askConfirm({ title: "Log out of admin?", icon: "🔒", confirmText: "Log out", message: "You can still view everything. Log in again to make changes." });
+    if (okGo) { setAdmin(false); toast("🔒 Logged out"); renderTour(); }
+  });
+  actions.tournaments = openTournaments;
+  actions["tr-pools"] = openTourTab("pools");
+  actions["tr-fixtures"] = openTourTab("fixtures");
+  actions["tr-table"] = openTourTab("table");
+  actions["tr-players"] = openTourTab("players");
+
+  // ---------- Tournament page rendering ----------
+  const TABS = [["setup", "⚙️ Setup"], ["pools", "🏆 Brackets & pools"], ["fixtures", "📅 Fixtures"], ["table", "📊 Points table"], ["players", "👤 Players"]];
+  function renderTour() {
+    if (!tu.open) return;
+    const t = curT();
+    $("tr-sub").textContent = t ? `${t.name} · ${tu.admin ? "Admin" : "View only"}` : (tu.admin ? "Admin" : "View only");
+    $("tr-lock").textContent = tu.admin ? "🔓" : "🔒";
+    $("tr-lock").setAttribute("aria-label", tu.admin ? "Log out of admin" : "Admin login");
+    const tabs = $("tr-tabs");
+    tabs.innerHTML = "";
+    TABS.forEach(([id, label]) => tabs.appendChild(el("button", {
+      type: "button", role: "tab", "aria-selected": String(tu.tab === id), "data-fk": `tr-tab-${id}`, text: label,
+      onclick: () => { tu.tab = id; renderTour(); },
+    })));
+    const main = $("tr-main");
+    main.innerHTML = "";
+    if (tu.tab === "players") { main.appendChild(dbView()); renderTrm(); return; }
+    main.appendChild(pickerCard());
+    if (!t) { main.appendChild(emptyCard()); renderTrm(); return; }
+    const view = { setup: setupView, pools: poolsView, fixtures: fixturesView, table: tableView }[tu.tab];
+    main.appendChild(view(t));
+    renderTrm();
+  }
+
+  function pickerCard() {
+    const sel = el("select", { id: "tr-pick", "aria-label": "Select tournament", onchange: e => { tu.cur = e.target.value; tu.poolTab = 0; tu.fixFilter = "all"; renderTour(); } },
+      tours.map(t => { const o = el("option", { value: t.id, text: t.name }); if (t.id === tu.cur) o.selected = true; return o; }));
+    if (!tours.length) sel.appendChild(el("option", { text: "No tournaments yet", value: "" }));
+    return el("div", { class: "card tr-pick" }, [
+      el("label", { for: "tr-pick", text: "Tournament" }),
+      el("div", { class: "row" }, [
+        sel,
+        tu.admin ? el("button", { type: "button", class: "primary", "data-fk": "tr-new", text: "＋ New", onclick: newTournament }) : null,
+      ]),
+    ]);
+  }
+  function emptyCard() {
+    return el("div", { class: "card tr-empty" }, [
+      el("h2", { text: "No tournaments yet" }),
+      el("p", { class: "muted", text: tu.admin ? "Create one to set up players, pools and fixtures." : "Ask the admin to share a tournament file, then import it here." }),
+      el("div", { class: "row" }, [
+        tu.admin ? el("button", { type: "button", class: "primary", text: "＋ Create tournament", onclick: newTournament }) : el("button", { type: "button", class: "primary", text: "🔓 Admin login", onclick: () => openLogin(null) }),
+        el("button", { type: "button", class: "ghost", text: "📥 Import tournament", onclick: () => $("tr-file").click() }),
+        tu.admin ? demoButton() : null,
+      ]),
+    ]);
+  }
+  function newTournament() {
+    if (!tu.admin) return openLogin(newTournament);
+    const t = sanitizeTour({ id: tId(), name: `Tournament ${tours.length + 1}`, created: Date.now(), format: "srr", poolCount: 1, frames: 3, ptsWin: 3, ptsDraw: 1, qualify: 0, players: [], pools: [], matches: [], ko: [], stage: "setup" });
+    tours.unshift(t);
+    tu.cur = t.id; tu.tab = "setup";
+    touch(t);
+    renderTour();
+    toast("🏆 New tournament created");
+  }
+
+  // Small stepper: − value +
+  function stepper(label, value, min, max, onChange, disabled, hint) {
+    const out = el("output", { class: "st-val", text: String(value) });
+    return el("div", { class: "tr-field" }, [
+      el("div", { class: "tr-flabel" }, [el("span", { text: label }), hint ? el("small", { class: "muted", text: hint }) : null]),
+      el("div", { class: "tr-stepper" }, [
+        el("button", { type: "button", class: "ghost", text: "−", "aria-label": `Decrease ${label}`, disabled: disabled || value <= min, onclick: () => onChange(value - 1) }),
+        out,
+        el("button", { type: "button", class: "ghost", text: "+", "aria-label": `Increase ${label}`, disabled: disabled || value >= max, onclick: () => onChange(value + 1) }),
+      ]),
+    ]);
+  }
+  function seg(label, options, value, onChange, disabled) {
+    return el("div", { class: "tr-field tr-segf" }, [
+      el("div", { class: "tr-flabel" }, [el("span", { text: label })]),
+      el("div", { class: "tr-seg", role: "group", "aria-label": label }, options.map(([v, text, off]) => el("button", {
+        type: "button", "aria-pressed": String(value === v), text, disabled: disabled || !!off, onclick: () => onChange(v),
+      }))),
+    ]);
+  }
+
+  function setupView(t) {
+    const wrap = el("div", { class: "tr-view" });
+    const locked = t.stage !== "setup";
+    const set = (k, v) => { t[k] = v; touch(t); renderTour(); };
+    const n = t.players.length, P = poolsFor(t);
+    if (!tu.admin) {
+      wrap.appendChild(el("div", { class: "card" }, [
+        el("h2", { text: t.name }),
+        el("p", { class: "muted", text: `${t.format === "drr" ? "Double" : "Single"} round robin · ${P > 1 ? `${P} pools` : "No pools"} · Best of ${t.frames} · Win ${t.ptsWin} / Draw ${t.ptsDraw}${t.qualify ? ` · Top ${t.qualify} ${P > 1 ? "per pool " : ""}to knockout` : ""}` }),
+        el("h3", { text: `Players (${n})` }),
+        n ? el("div", { class: "tr-plist" }, t.players.map(p => el("div", { class: "tr-prow" }, [
+          el("span", { class: "tr-prn" }, [el("b", { text: pname(t, p.id) }), el("small", { class: "muted", text: `ID ${p.id}` })]),
+        ]))) : el("p", { class: "muted", text: "No players yet." }),
+        el("button", { type: "button", class: "primary", text: "🔓 Admin login to edit", onclick: () => openLogin(null) }),
+      ]));
+      wrap.appendChild(shareCard(t));
+      return wrap;
+    }
+
+    // Details
+    const nameIn = el("input", { type: "text", id: "tr-name", maxlength: "40", value: t.name, onchange: e => { t.name = e.target.value.trim().slice(0, 40) || "Tournament"; touch(t); renderTour(); } });
+    wrap.appendChild(el("div", { class: "card" }, [
+      el("h2", { text: "Tournament setup" }),
+      locked ? el("p", { class: "tr-note", text: "🔒 Fixtures are generated, so the format, pools and players are locked. Entry fees can still be updated. Use “Reset fixtures” below to change the rest." }) : null,
+      el("label", { for: "tr-name", text: "Name" }), nameIn,
+      seg("Format", [["srr", "Single round robin"], ["drr", "Double round robin"]], t.format, v => set("format", v), locked),
+      stepper("Frames per match", t.frames, 1, 10, v => set("frames", v), locked, `Best of ${t.frames} · first to ${need(t)}${t.frames % 2 === 0 ? " · draws possible in pools" : ""}`),
+      stepper("Qualify to knockout", t.qualify, 0, 4, v => set("qualify", v), locked, t.qualify ? `Top ${t.qualify} ${P > 1 ? "from each pool" : "from the league"} → bracket` : "0 = no knockout (league only)"),
+      seg("Points", [["3-1", "Win 3 · Draw 1"], ["2-1", "Win 2 · Draw 1"]], `${t.ptsWin}-${t.ptsDraw}`, v => { const [w, d] = v.split("-").map(Number); t.ptsWin = w; t.ptsDraw = d; touch(t); renderTour(); }, false),
+    ]));
+
+    // Players
+    const err = el("p", { class: "trl-err", role: "alert" });
+    const pName = el("input", { type: "text", id: "tr-pname", maxlength: "24", placeholder: "Player name", autocapitalize: "characters", autocomplete: "off" });
+    const pPhone = el("input", { type: "tel", id: "tr-pphone", maxlength: "20", placeholder: "Phone number", inputmode: "tel", autocomplete: "off" });
+    const addToTour = (dbp, fee) => {
+      if (t.players.some(x => x.id === dbp.id)) { err.textContent = `${dbp.name} is already in this tournament.`; return false; }
+      if (t.players.length >= 64) { err.textContent = "Maximum 64 players."; return false; }
+      t.players.push({ id: dbp.id, name: dbp.name, fee });
+      t.pools = [];
+      touch(t);
+      return true;
+    };
+    const addNew = () => {
+      err.textContent = "";
+      const c = checkPlayer(pName.value, pPhone.value, null);
+      if (c.error) {
+        err.textContent = c.error;
+        if (c.clash && !t.players.some(x => x.id === c.clash.id)) err.appendChild(el("button", { type: "button", class: "ghost tr-inline", text: `＋ Add ${c.clash.name}`, onclick: () => { if (addToTour(c.clash, tu.addFee)) { renderTour(); toast(`Added ${c.clash.name}`); focusAdd(); } } }));
+        return;
+      }
+      const dbp = registerPlayer(c.name, c.phone);
+      if (!dbp) return;
+      addToTour(dbp, tu.addFee);
+      renderTour();
+      toast(`✔ ${dbp.name} added · Player ID ${dbp.id}`);
+      focusAdd();
+    };
+    const focusAdd = () => setTimeout(() => { const i = $("tr-pname"); if (i) i.focus(); }, 0);
+    pName.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); pPhone.focus(); } });
+    pPhone.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addNew(); } });
+    const others = pdb.filter(x => !t.players.some(p => p.id === x.id)).sort((a, b) => a.name.localeCompare(b.name));
+    const pick = el("select", { id: "tr-pexist", "aria-label": "Add a player from the database" }, [
+      el("option", { value: "", text: others.length ? `Add a registered player (${others.length})` : "No other players yet" }),
+      ...others.map(x => el("option", { value: x.id, text: `${x.name} · ID ${x.id}` })),
+    ]);
+    const paid = t.players.filter(p => p.fee === "paid").length;
+    wrap.appendChild(el("div", { class: "card" }, [
+      el("h2", { text: `Players (${n})` }),
+      locked ? null : el("div", { class: "tr-pform" }, [
+        el("label", { for: "tr-pname", text: "Name" }), pName,
+        el("label", { for: "tr-pphone", text: "Phone number (required)" }), pPhone,
+        seg("Entry fee", [["paid", "✔ Paid"], ["unpaid", "Not paid"]], tu.addFee, v => { tu.addFee = v; const keep = [pName.value, pPhone.value]; renderTour(); $("tr-pname").value = keep[0]; $("tr-pphone").value = keep[1]; }, false),
+        err,
+        el("button", { type: "button", class: "primary big", "data-fk": "tr-padd", text: "＋ Add player", onclick: addNew }),
+        el("p", { class: "muted small", text: "A 5-digit Player ID is created automatically. Their results are saved to the player database." }),
+        el("div", { class: "row tr-addrow" }, [pick, el("button", { type: "button", class: "ghost", "data-fk": "tr-pexist-add", text: "＋ Add", disabled: !others.length, onclick: () => {
+          const dbp = dbById(pick.value);
+          if (!dbp) { toast("Choose a player first"); return; }
+          if (addToTour(dbp, tu.addFee)) { renderTour(); toast(`Added ${dbp.name}`); }
+        } })]),
+      ]),
+      n ? el("p", { class: "muted small", text: `Entry fee: ${paid} paid · ${n - paid} not paid${tu.admin ? " · tap the status to change it" : ""}` }) : null,
+      n ? el("div", { class: "tr-plist" }, t.players.map(p => el("div", { class: "tr-prow" }, [
+        el("button", { type: "button", class: "tr-prn", "aria-label": `${pname(t, p.id)} details`, onclick: () => openTrm({ kind: "player", pid: p.id }) }, [
+          el("b", { text: pname(t, p.id) }),
+          el("small", { class: "muted", text: `ID ${p.id}${dbById(p.id) && dbById(p.id).phone ? " · " + dbById(p.id).phone : ""}` }),
+        ]),
+        el("button", { type: "button", class: `tr-fee ${p.fee === "paid" ? "paid" : "unpaid"}`, "data-fk": `tr-fee-${p.id}`, "aria-label": `Entry fee ${p.fee === "paid" ? "paid" : "not paid"}, tap to change`, text: p.fee === "paid" ? "✔ Paid" : "Not paid", onclick: () => {
+          p.fee = p.fee === "paid" ? "unpaid" : "paid"; touch(t); renderTour();
+        } }),
+        locked ? null : el("button", { type: "button", class: "tr-x", "aria-label": `Remove ${pname(t, p.id)}`, text: "✕", onclick: async () => {
+          const okGo = await askConfirm({ title: `Remove ${pname(t, p.id)}?`, icon: "🗑", confirmText: "Remove", danger: true, message: "They'll be taken out of this tournament. They stay in the player database." });
+          if (!okGo) return;
+          t.players = t.players.filter(x => x.id !== p.id); t.pools = []; touch(t); renderTour();
+        } }),
+      ]))) : el("p", { class: "muted", text: "No players yet." }),
+    ]));
+
+    // Pools
+    const canPool = n > 8, maxP = maxPools(n);
+    if (!canPool && t.poolCount !== 1) { t.poolCount = 1; t.pools = []; }
+    const poolsReady = t.pools.length === P && t.pools.flat().length === n;
+    wrap.appendChild(el("div", { class: "card" }, [
+      el("h2", { text: "Pools" }),
+      canPool
+        ? seg("Enable pools?", [["no", "No"], ["yes", "Yes"]], P > 1 ? "yes" : "no", v => { t.poolCount = v === "yes" ? 2 : 1; t.pools = []; touch(t); renderTour(); }, locked)
+        : el("p", { class: "muted", text: `Pools can be turned on when there are more than 8 players (now ${n}). Everyone plays in one league.` }),
+      canPool && P > 1 ? seg("How many pools?", [2, 3, 4].map(k => [k, `${k} · ${POOLS.slice(0, k).join(", ")}`, k > maxP]), P, v => {
+        if (v > maxP) { toast(`${v} pools need at least ${v * MIN_POOL} players`); return; }
+        t.poolCount = v; t.pools = []; touch(t); renderTour();
+      }, locked) : null,
+      canPool && P > 1 ? el("p", { class: "muted small", text: `Each pool needs at least ${MIN_POOL} players. With ${n} players you can have up to ${maxP} pools.` }) : null,
+      P > 1 ? el("div", { class: "row" }, [
+        el("button", { type: "button", class: "ghost", text: "🔀 Shuffle into pools", disabled: locked, onclick: () => { shufflePools(t); touch(t); renderTour(); toast("🔀 Players shuffled"); } }),
+      ]) : null,
+      P > 1 ? (poolsReady ? poolsGrid(t, false) : el("p", { class: "muted", text: "Tap Shuffle to draw players into pools (it's also done automatically when you generate fixtures)." })) : null,
+      locked
+        ? el("button", { type: "button", class: "danger big", text: "↺ Reset fixtures", onclick: async () => {
+            const okGo = await askConfirm({ title: "Reset fixtures?", icon: "↺", confirmText: "Reset fixtures", danger: true, message: "All match results, the points table and the bracket for this tournament will be cleared. Players are kept." });
+            if (!okGo) return;
+            t.matches = []; t.ko = []; t.stage = "setup"; touch(t); renderTour(); toast("Fixtures reset");
+          } })
+        : el("button", { type: "button", class: "primary big", text: "✅ Generate fixtures", disabled: n < 2, onclick: () => {
+            const e2 = generateFixtures(t);
+            if (e2) { toast(e2); return; }
+            touch(t); tu.tab = "fixtures"; renderTour(); toast(`📅 ${t.matches.length} fixtures created`);
+          } }),
+    ]));
+
+    wrap.appendChild(shareCard(t));
+    return wrap;
+  }
+
+  // ---------- Player database page ----------
+  function dbView() {
+    const wrap = el("div", { class: "tr-view" });
+    const q = el("input", { type: "search", id: "tr-dbq", placeholder: "Search name, ID or phone", value: tu.dbq, autocomplete: "off", "aria-label": "Search players" });
+    const list = el("div", { class: "tr-plist" });
+    const draw = () => {
+      const s = tu.dbq.trim().toUpperCase(), digits = s.replace(/\D/g, "");
+      const rows = pdb.filter(p => !s || p.name.includes(s) || p.id.includes(s) || (tu.admin && digits.length >= 3 && p.phone.includes(digits)))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      list.innerHTML = "";
+      if (!rows.length) list.appendChild(el("p", { class: "muted", text: pdb.length ? "No players match." : "No players yet. Players are added when the admin enters them in a tournament." }));
+      rows.forEach(p => {
+        const st = playerStats(p.id);
+        list.appendChild(el("button", { type: "button", class: "tr-prow tr-dbrow", "data-fk": `tr-db-${p.id}`, onclick: () => openTrm({ kind: "player", pid: p.id }) }, [
+          el("span", { class: "tr-prn" }, [el("b", { text: p.name }), el("small", { class: "muted", text: `ID ${p.id} · ${tu.admin ? p.phone || "no phone" : maskPhone(p.phone)}` })]),
+          el("span", { class: "tr-pst" }, [
+            el("small", { text: `${st.tours} tournament${st.tours === 1 ? "" : "s"}${st.titles ? ` · 🏆 ${st.titles}` : ""}` }),
+            el("small", { class: "muted", text: `W ${st.w} · L ${st.l} · HB ${st.hb}` }),
+          ]),
+        ]));
+      });
+    };
+    q.addEventListener("input", () => { tu.dbq = q.value; draw(); });
+    draw();
+    wrap.appendChild(el("div", { class: "card" }, [
+      el("h2", { text: `Player database (${pdb.length})` }),
+      el("p", { class: "muted small", text: "Every player's results across all tournaments on this device. Tap a player for full details." }),
+      q,
+      tu.admin ? el("button", { type: "button", class: "primary", "data-fk": "tr-dbnew", text: "＋ Register player", onclick: () => openTrm({ kind: "pform" }) }) : null,
+      list,
+    ]));
+    return wrap;
+  }
+
+  function playerView(pid) {
+    const p = dbById(pid);
+    const close = () => { closeTrm(); renderTour(); };
+    const head = el("div", { class: "modal-head" }, [el("h2", { id: "trm-title", text: p ? p.name : "Player" }), el("button", { type: "button", class: "ghost", "aria-label": "Close", text: "✕", onclick: close })]);
+    if (!p) return el("div", {}, [head, el("p", { class: "muted", text: "This player isn't in the player database on this device." })]);
+    const st = playerStats(pid);
+    const pct = st.mp ? Math.round((st.w / st.mp) * 100) : 0;
+    const box = (k, v) => el("div", { class: "tr-stat" }, [el("b", { text: String(v) }), el("small", { text: k })]);
+    return el("div", {}, [
+      head,
+      el("p", { class: "muted small", text: `Player ID ${p.id} · Phone ${tu.admin ? p.phone || "—" : maskPhone(p.phone)}` }),
+      el("div", { class: "tr-stats" }, [
+        box("Tournaments", st.tours), box("Titles", st.titles), box("Matches", st.mp), box("Win %", `${pct}%`),
+        box("Won", st.w), box("Drawn", st.d), box("Lost", st.l), box("Frame diff", (st.fw - st.fl > 0 ? "+" : "") + (st.fw - st.fl)),
+        box("Frames won", st.fw), box("Frames lost", st.fl), box("Highest break", st.hb), box("Highest score", st.hs),
+      ]),
+      tu.admin && st.tours ? el("p", { class: "muted small", text: `Entry fee paid in ${st.paid} of ${st.tours} tournament${st.tours === 1 ? "" : "s"}.` }) : null,
+      el("h3", { text: "Tournaments" }),
+      st.history.length ? el("ul", { class: "tr-hist" }, st.history.map(h => el("li", {}, [
+        el("b", { text: h.name }), ` · P ${h.mp} W ${h.w}${h.d ? ` D ${h.d}` : ""} L ${h.l}`,
+        h.champ ? el("span", { class: "tr-champ", text: " 🏆 Champion" }) : null,
+        tu.admin ? el("small", { class: `tr-fee ${h.fee}`, text: h.fee === "paid" ? "Paid" : "Not paid" }) : null,
+      ]))) : el("p", { class: "muted small", text: "Not in any tournament yet." }),
+      el("p", { class: "muted small", text: "Highest score = most points in a single live-scored frame." }),
+      tu.admin ? el("div", { class: "ask-actions" }, [
+        el("button", { type: "button", class: "danger", text: "🗑 Delete", disabled: st.tours > 0, title: st.tours ? "Remove them from their tournaments first" : "", onclick: async () => {
+          const okGo = await askConfirm({ title: `Delete ${p.name}?`, icon: "🗑", confirmText: "Delete player", danger: true, message: "They'll be removed from the player database on this device." });
+          if (!okGo) return;
+          pdb = pdb.filter(x => x.id !== p.id); saveDb(); closeTrm(); renderTour(); toast("Player deleted");
+        } }),
+        el("button", { type: "button", class: "primary", "data-fk": "tr-pedit", text: "✎ Edit", onclick: () => openTrm({ kind: "pform", pid }) }),
+      ]) : null,
+      tu.admin && st.tours ? el("p", { class: "muted small", text: "Players in a tournament can't be deleted. Remove them from the tournament first." }) : null,
+    ]);
+  }
+
+  function pformView(pid) {
+    const p = pid ? dbById(pid) : null;
+    const nm = el("input", { type: "text", maxlength: "24", value: p ? p.name : "", autocapitalize: "characters", "aria-label": "Name", id: "trm-pname" });
+    const ph = el("input", { type: "tel", maxlength: "20", value: p ? p.phone : "", inputmode: "tel", "aria-label": "Phone number", id: "trm-pphone" });
+    const err = el("p", { class: "trl-err", role: "alert" });
+    const back = () => { if (p) openTrm({ kind: "player", pid }); else { closeTrm(); renderTour(); } };
+    const save = () => {
+      const c = checkPlayer(nm.value, ph.value, p ? p.id : null);
+      if (c.error) { err.textContent = c.error; return; }
+      if (p) { p.name = c.name; p.phone = c.phone; saveDb(); tours.forEach(t => t.players.forEach(x => { if (x.id === p.id) x.name = c.name; })); saveTours(); toast("✔ Player updated"); openTrm({ kind: "player", pid }); renderTour(); }
+      else { const np = registerPlayer(c.name, c.phone); if (!np) return; toast(`✔ ${np.name} registered · ID ${np.id}`); openTrm({ kind: "player", pid: np.id }); renderTour(); }
+    };
+    ph.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); save(); } });
+    return el("div", {}, [
+      el("div", { class: "modal-head" }, [el("h2", { id: "trm-title", text: p ? "✎ Edit player" : "＋ Register player" }), el("button", { type: "button", class: "ghost", "aria-label": "Close", text: "✕", onclick: () => { closeTrm(); renderTour(); } })]),
+      p ? el("p", { class: "muted small", text: `Player ID ${p.id}` }) : el("p", { class: "muted small", text: "A 5-digit Player ID is created automatically." }),
+      el("label", {}, ["Name", nm]), el("label", {}, ["Phone number (required, one per player)", ph]),
+      err,
+      el("div", { class: "ask-actions" }, [
+        el("button", { type: "button", class: "ghost", text: "Cancel", onclick: back }),
+        el("button", { type: "button", class: "primary", "data-fk": "trm-psave", text: "Save", onclick: save }),
+      ]),
+    ]);
+  }
+
+  // ---------- Demo data: 5 tournaments × 12 players, fixtures and results (admin only, removable) ----------
+  const hasDemo = () => tours.some(t => t.demo) || pdb.some(p => p.demo);
+  function demoButton() {
+    return hasDemo()
+      ? el("button", { type: "button", class: "danger", "data-fk": "tr-demo-del", text: "🧹 Remove demo data", onclick: async () => {
+          const okGo = await askConfirm({ title: "Remove demo data?", icon: "🧹", confirmText: "Remove demo data", danger: true, message: "The 5 demo tournaments and their demo players will be removed. Your own tournaments and players are kept." });
+          if (!okGo) return;
+          removeDemo(); renderTour(); toast("Demo data removed");
+        } })
+      : el("button", { type: "button", class: "ghost", "data-fk": "tr-demo-add", text: "🧪 Load demo data", onclick: async () => {
+          const okGo = await askConfirm({ title: "Load demo data?", icon: "🧪", confirmText: "Load demo data", message: "Adds 5 sample tournaments with 12 players each (60 players), fixtures, results, live scores and knockouts. You can remove them all later with “Remove demo data”." });
+          if (!okGo) return;
+          loadDemo(); renderTour(); toast("🧪 5 demo tournaments added");
+        } });
+  }
+  function removeDemo() {
+    tours = tours.filter(t => !t.demo);
+    const used = new Set(tours.flatMap(t => t.players.map(p => p.id)));
+    pdb = pdb.filter(p => !p.demo || used.has(p.id));
+    saveTours(); saveDb();
+    if (!curT()) tu.cur = tours.length ? tours[0].id : null;
+  }
+  function loadDemo() {
+    removeDemo();
+    let seed = 20250101;
+    const rnd = () => { seed = (seed + 0x6D2B79F5) | 0; let x = Math.imul(seed ^ (seed >>> 15), 1 | seed); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+    const ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+    const FIRST = ["ARJUN", "BEN", "CARLOS", "DAVID", "ETHAN", "FARHAN", "GEORGE", "HARRY", "IMRAN", "JACK", "KIRAN", "LEO", "MANOJ", "NATHAN", "OSCAR", "PRAKASH", "RAHUL", "SAM", "TOM", "VIKRAM"];
+    const LAST = ["ADAMS", "BAKER", "CHOPRA", "DAS", "EVANS", "FERNANDES", "GILL", "HUGHES", "IYER", "JOSHI", "KHAN", "LEWIS", "MEHTA", "NAIR", "OWENS", "PATEL", "QUINN", "REDDY", "SHAH", "TAYLOR", "USMAN", "VARMA", "WALKER", "XAVIER", "YADAV", "ZAIDI", "BROOKS", "COLLINS", "MENON", "RAO"];
+    // 60 unique names: (i mod 20, 7i mod 30) never repeats for i < 60
+    const names = Array.from({ length: 60 }, (_, i) => `${FIRST[i % 20]} ${LAST[(i * 7) % 30]}`);
+    const skill = new Map();
+    let phoneN = 100;
+    const people = names.map(name => {
+      let phone;
+      do { phone = `+1555010${String(phoneN++).padStart(4, "0")}`; } while (dbByPhone(phone));
+      const p = registerPlayer(name, phone);
+      p.demo = true;
+      skill.set(p.id, 0.5 + rnd());
+      return p;
+    });
+    saveDb();
+    const day = 86400000, now = Date.now();
+    // one frame between a and b; returns { a, b, w, brA, brB }
+    const frame = (pa, pb) => {
+      const aWins = rnd() < skill.get(pa) / (skill.get(pa) + skill.get(pb));
+      const win = ri(55, 118), lose = ri(4, Math.min(win - 4, 72));
+      const sa = aWins ? win : lose, sb = aWins ? lose : win;
+      const br = v => Math.min(147, Math.max(0, Math.round(v * (0.35 + rnd() * 0.6))));
+      return { a: sa, b: sb, w: aWins ? "a" : "b", brA: br(sa), brB: br(sb) };
+    };
+    const play = (t, m) => {
+      Object.assign(m, { fa: 0, fb: 0, hbA: 0, hbB: 0, frameLog: [], live: null });
+      while (!matchDecided(t, m)) {
+        const f = frame(m.a, m.b);
+        m.frameLog.push({ a: f.a, b: f.b, w: f.w });
+        if (f.w === "a") m.fa++; else m.fb++;
+        m.hbA = Math.max(m.hbA, f.brA); m.hbB = Math.max(m.hbB, f.brB);
+      }
+      m.status = "done";
+    };
+    const playKO = (t, limit) => {
+      let left = limit === undefined ? Infinity : limit;
+      t.ko.forEach(round => round.forEach(id => {
+        const m = byId(t, id);
+        if (left > 0 && m && m.a && m.b && m.status === "pending") { play(t, m); left--; propagateKO(t); }
+      }));
+    };
+    const setLive = (t, m) => {
+      const f = frame(m.a, m.b);
+      m.frameLog = [{ a: f.a, b: f.b, w: f.w }]; m.fa = f.w === "a" ? 1 : 0; m.fb = f.w === "b" ? 1 : 0;
+      m.hbA = f.brA; m.hbB = f.brB;
+      m.live = { sa: 38, sb: 21, turn: "a", brk: 14, reds: 7, free: false, ci: 0 };
+      m.hbA = Math.max(m.hbA, 14);
+      m.status = "live";
+    };
+    const specs = [
+      // name, format, pools, frames, qualify, what to play
+      ["DEMO · SPRING LEAGUE", "srr", 1, 3, 0, "all"],                 // finished league, champion = top of table
+      ["DEMO · SUMMER CUP", "srr", 2, 5, 2, "ko-all"],                 // 2 pools of 6 → semis → final (finished)
+      ["DEMO · AUTUMN DOUBLE RR", "drr", 1, 2, 0, "half"],             // double round robin, draws possible, in progress + 1 live
+      ["DEMO · WINTER CHAMPIONSHIP", "srr", 3, 3, 2, "ko-part"],       // 3 pools of 4 → 6 qualifiers, byes, QFs in progress
+      ["DEMO · NEW YEAR CLASSIC", "srr", 2, 7, 1, "none"],             // fixtures created, nothing played yet
+    ];
+    const made = specs.map(([name, format, pools, frames, qualify, mode], k) => {
+      const ps = people.slice(k * 12, k * 12 + 12);
+      const t = sanitizeTour({ id: tId(), name, created: now - (50 - k * 10) * day, format, poolCount: pools, frames, ptsWin: 3, ptsDraw: 1, qualify,
+        players: ps.map(p => ({ id: p.id, name: p.name, fee: rnd() < 0.75 ? "paid" : "unpaid" })), pools: [], matches: [], ko: [], stage: "setup" });
+      t.demo = true;
+      generateFixtures(t);
+      const pool = t.matches.filter(m => m.stage === "pool");
+      if (mode === "all" || mode === "ko-all" || mode === "ko-part") pool.forEach(m => play(t, m));
+      if (mode === "half") { pool.slice(0, Math.floor(pool.length / 2)).forEach(m => play(t, m)); setLive(t, pool[Math.floor(pool.length / 2)]); }
+      if (mode === "ko-all") { generateKO(t); playKO(t); }
+      if (mode === "ko-part") { generateKO(t); playKO(t, 2); }
+      t.updated = now - (40 - k * 10) * day;
+      return t;
+    });
+    tours = [...made.reverse(), ...tours];
+    saveTours();
+    tu.cur = tours[0].id; tu.tab = "setup";
+  }
+
+  function shareCard(t) {
+    return el("div", { class: "card" }, [
+      el("h2", { text: "Share & data" }),
+      el("p", { class: "muted small", text: "Data is saved on this device. To show it on other phones, share the file and import it there (re-share to update)." }),
+      el("div", { class: "tr-stack" }, [
+        el("button", { type: "button", class: "ghost", text: "📤 Share tournament file", onclick: () => shareTour(t) }),
+        el("button", { type: "button", class: "ghost", text: "📥 Import tournament file", onclick: () => $("tr-file").click() }),
+        tu.admin ? el("button", { type: "button", class: "ghost", text: "🔑 Change admin password", onclick: () => openTrm({ kind: "pw" }) }) : null,
+        tu.admin ? demoButton() : null,
+        tu.admin ? el("button", { type: "button", class: "danger", text: "🗑 Delete this tournament", onclick: async () => {
+          const okGo = await askConfirm({ title: `Delete “${t.name}”?`, icon: "🗑", confirmText: "Delete tournament", danger: true, message: "Players, fixtures, results and the points table for this tournament will be removed from this device. This can't be undone." });
+          if (!okGo) return;
+          tours = tours.filter(x => x.id !== t.id); saveTours();
+          tu.cur = tours.length ? tours[0].id : null; tu.tab = "setup";
+          renderTour(); toast("Tournament deleted");
+        } }) : null,
+      ]),
+    ]);
+  }
+  async function shareTour(t) {
+    let withPhones = false;
+    if (tu.admin) withPhones = await askConfirm({ title: "Include phone numbers?", icon: "📞", confirmText: "Include phones", message: "Choose “Include phones” only when sending to another admin device. Anyone who gets the file can read the numbers. Cancel shares names, IDs and results without phone numbers." });
+    const roster = t.players.map(p => { const d = dbById(p.id); return { id: p.id, name: pname(t, p.id), phone: withPhones && d ? d.phone : "" }; });
+    const tour = { ...t, players: t.players.map(p => ({ id: p.id, name: pname(t, p.id), fee: tu.admin ? p.fee : "unpaid" })) };
+    const data = { app: "snooker-century-tournament", version: 2, exported: new Date().toISOString(), tournament: tour, roster };
+    const safe = t.name.replace(/[^\w-]+/g, "-").slice(0, 30) || "tournament";
+    shareOrDownload(`${safe}-${stamp()}.json`, JSON.stringify(data, null, 2), "application/json");
+  }
+  // Adds the file's players to this device's player database (never overwrites a different player's phone).
+  function mergeRoster(t, roster) {
+    const list = Array.isArray(roster) ? roster.slice(0, 64) : [];
+    t.players.forEach(tp => {
+      if (!PID_RE.test(tp.id)) return;
+      const r = list.find(x => x && x.id === tp.id) || {};
+      const ph = normPhone(r.phone);
+      const okPh = validPhone(ph) && !dbByPhone(ph) ? ph : "";
+      const d = dbById(tp.id);
+      if (d) { d.name = tp.name; if (!d.phone && okPh) d.phone = okPh; }
+      else pdb.push({ id: tp.id, name: tp.name, phone: okPh, created: Date.now() });
+    });
+    saveDb();
+  }
+  const trFile = el("input", { type: "file", id: "tr-file", class: "sr-only", accept: ".json,application/json", tabindex: "-1", "aria-hidden": "true" });
+  document.body.appendChild(trFile);
+  trFile.addEventListener("change", e => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { toast("⚠️ File is too large"); return; }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      let t;
+      try {
+        const d = JSON.parse(String(reader.result));
+        t = sanitizeTour(d && d.app === "snooker-century-tournament" ? d.tournament : d);
+        if (t) t._roster = d && Array.isArray(d.roster) ? d.roster : [];
+      } catch (_) { t = null; }
+      if (!t || !t.players) { toast("⚠️ That isn't a tournament file"); return; }
+      const roster = t._roster; delete t._roster;
+      const existing = tours.find(x => x.id === t.id);
+      if (existing) {
+        const okGo = await askConfirm({ title: `Update “${existing.name}”?`, icon: "📥", confirmText: "Update", message: "This device already has this tournament. Replace it with the version in the file?" });
+        if (!okGo) return;
+        tours = tours.map(x => (x.id === t.id ? t : x));
+      } else tours.unshift(t);
+      mergeRoster(t, roster);
+      saveTours();
+      tu.cur = t.id;
+      renderTour();
+      toast(`📥 Imported “${t.name}”`);
+    };
+    reader.readAsText(f);
+  });
+
+  function poolsGrid(t, withPos) {
+    return el("div", { class: "tr-pools" }, t.pools.map((ids, pi) => {
+      const rows = withPos ? standings(t, pi) : ids.map(id => ({ id, name: pname(t, id) }));
+      return el("div", { class: "tr-pool" }, [
+        el("h3", { text: poolName(pi, t) }),
+        el("ol", {}, rows.map((r, i) => el("li", { class: withPos && t.qualify ? (i < t.qualify ? "q-in" : "q-out") : "" }, [
+          el("span", { class: "tr-pno", text: String(i + 1) }),
+          el("span", { class: "tr-pn", text: r.name }),
+          withPos ? el("span", { class: "tr-pp", text: `${r.pts} pts` }) : null,
+        ]))),
+      ]);
+    }));
+  }
+
+  function poolsView(t) {
+    const wrap = el("div", { class: "tr-view" });
+    if (!t.pools.length || t.stage === "setup") {
+      wrap.appendChild(el("div", { class: "card" }, [el("h2", { text: "Pools" }), el("p", { class: "muted", text: "Pools appear after the admin generates fixtures." })]));
+      return wrap;
+    }
+    wrap.appendChild(el("div", { class: "card" }, [el("h2", { text: "Pools" }), poolsGrid(t, true)]));
+    const card = el("div", { class: "card" }, [el("h2", { text: "Knockout bracket" })]);
+    if (!t.qualify) card.appendChild(el("p", { class: "muted", text: "This tournament is pools only (no knockout)." }));
+    else if (!t.ko.length) {
+      card.appendChild(el("p", { class: "muted", text: `Top ${t.qualify} from each pool go into the bracket once all pool matches are finished.` }));
+      if (tu.admin) card.appendChild(el("button", { type: "button", class: "primary", text: "🏆 Generate knockout", disabled: !poolsDone(t), onclick: () => {
+        const err = generateKO(t);
+        if (err) { toast(err); return; }
+        touch(t); renderTour(); toast("🏆 Knockout bracket created");
+      } }));
+    } else {
+      card.appendChild(bracketEl(t));
+      if (tu.admin) card.appendChild(el("button", { type: "button", class: "ghost", text: "↺ Redraw knockout", onclick: async () => {
+        const okGo = await askConfirm({ title: "Redraw the knockout?", icon: "↺", confirmText: "Redraw", danger: true, message: "All knockout results will be cleared and the bracket rebuilt from the current pool standings." });
+        if (!okGo) return;
+        const err = generateKO(t); if (err) toast(err); touch(t); renderTour();
+      } }));
+    }
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  function bracketEl(t) {
+    return el("div", { class: "tr-bracket" }, t.ko.map(ids => el("div", { class: "tr-round" }, [
+      el("div", { class: "tr-rname", text: roundName(ids.length) }),
+      ...ids.map(id => {
+        const m = byId(t, id), w = winnerOf(m);
+        const line = (pid, f, side) => el("div", { class: "tr-bl" + (w && w === pid ? " win" : "") }, [
+          el("span", { class: "tr-bn", text: pid ? pname(t, pid) : m.status === "bye" ? "— bye —" : "TBD" }),
+          el("span", { class: "tr-bf", text: m.status === "done" || m.status === "live" ? String(f) : "" }),
+        ]);
+        return el("button", { type: "button", class: `tr-bm st-${m.status}`, "data-fk": `tr-m-${id}`, onclick: () => openTrm({ kind: "match", mid: id }) }, [
+          line(m.a, m.fa, "a"), line(m.b, m.fb, "b"),
+          m.status === "live" ? el("span", { class: "tr-live", text: "LIVE" }) : null,
+        ]);
+      }),
+    ])));
+  }
+
+  function fixturesView(t) {
+    const wrap = el("div", { class: "tr-view" });
+    if (!t.matches.length) {
+      wrap.appendChild(el("div", { class: "card" }, [el("h2", { text: "Fixtures" }), el("p", { class: "muted", text: tu.admin ? "Go to Setup and tap “Generate fixtures”." : "No fixtures yet." })]));
+      return wrap;
+    }
+    const filters = [["all", "All"], ...t.pools.map((_, i) => [`p${i}`, poolName(i, t)]), ...(t.ko.length ? [["ko", "Knockout"]] : [])];
+    if (!filters.some(([id]) => id === tu.fixFilter)) tu.fixFilter = "all";
+    wrap.appendChild(el("div", { class: "tabs tr-filter" }, filters.map(([id, label]) => el("button", {
+      type: "button", "aria-selected": String(tu.fixFilter === id), text: label, onclick: () => { tu.fixFilter = id; renderTour(); },
+    }))));
+    const done = t.matches.filter(m => m.status === "done" || m.status === "bye").length;
+    wrap.appendChild(el("p", { class: "muted small", text: `${done} of ${t.matches.length} matches finished · Best of ${t.frames}` }));
+    const groups = [];
+    t.pools.forEach((_, pi) => {
+      if (tu.fixFilter !== "all" && tu.fixFilter !== `p${pi}`) return;
+      const ms = t.matches.filter(m => m.stage === "pool" && m.pool === pi);
+      [...new Set(ms.map(m => m.round))].sort((a, b) => a - b).forEach(r => groups.push([`${poolName(pi, t)} · Round ${r}`, ms.filter(m => m.round === r)]));
+    });
+    if (tu.fixFilter === "all" || tu.fixFilter === "ko") t.ko.forEach(ids => groups.push([`Knockout · ${roundName(ids.length)}`, ids.map(id => byId(t, id))]));
+    groups.forEach(([title, ms]) => {
+      wrap.appendChild(el("h3", { class: "tr-gh", text: title }));
+      wrap.appendChild(el("div", { class: "tr-fix" }, ms.map(m => fixtureRow(t, m))));
+    });
+    return wrap;
+  }
+  function fixtureRow(t, m) {
+    const w = winnerOf(m);
+    const shown = m.status === "done" || m.status === "live";
+    const pill = { pending: ["Upcoming", ""], live: ["● Live", "live"], done: [w ? "Final" : "Draw", "done"], bye: ["Bye", "bye"] }[m.status];
+    return el("button", { type: "button", class: `tr-frow st-${m.status}`, "data-fk": `tr-m-${m.id}`, onclick: () => openTrm({ kind: "match", mid: m.id }) }, [
+      el("span", { class: "tr-fa" + (w && w === m.a ? " win" : ""), text: m.a ? pname(t, m.a) : "TBD" }),
+      el("span", { class: "tr-fs" }, [
+        el("b", { text: shown ? `${m.fa} – ${m.fb}` : "vs" }),
+        el("small", { class: `tr-pill ${pill[1]}`, text: pill[0] }),
+      ]),
+      el("span", { class: "tr-fb" + (w && w === m.b ? " win" : ""), text: m.b ? pname(t, m.b) : m.status === "bye" ? "—" : "TBD" }),
+    ]);
+  }
+
+  function tableView(t) {
+    const wrap = el("div", { class: "tr-view" });
+    if (!t.pools.length || t.stage === "setup") {
+      wrap.appendChild(el("div", { class: "card" }, [el("h2", { text: "Points table" }), el("p", { class: "muted", text: "The table appears once fixtures are generated." })]));
+      return wrap;
+    }
+    if (tu.poolTab >= t.pools.length) tu.poolTab = 0;
+    if (t.pools.length > 1) wrap.appendChild(el("div", { class: "tabs tr-filter" }, t.pools.map((_, i) => el("button", {
+      type: "button", "aria-selected": String(tu.poolTab === i), text: poolName(i, t), onclick: () => { tu.poolTab = i; renderTour(); },
+    }))));
+    const rows = standings(t, tu.poolTab);
+    const draws = t.frames % 2 === 0;
+    const cols = ["Pos", "Player", "MP", "W", ...(draws ? ["D"] : []), "L", "FW", "FL", "FD", "HB", "Pts"];
+    const table = el("table", { class: "tr-table" }, [
+      el("thead", {}, [el("tr", {}, cols.map(c => el("th", { text: c, class: c === "Player" ? "l" : "" })))]),
+      el("tbody", {}, rows.map((r, i) => el("tr", { class: t.qualify ? (i < t.qualify ? "q-in" : "q-out") : "" }, [
+        el("td", { class: "pos", text: String(i + 1) }),
+        el("td", { class: "l nm", text: r.name }),
+        el("td", { text: String(r.mp) }), el("td", { text: String(r.w) }),
+        draws ? el("td", { text: String(r.d) }) : null,
+        el("td", { text: String(r.l) }), el("td", { text: String(r.fw) }), el("td", { text: String(r.fl) }),
+        el("td", { class: r.fd > 0 ? "pos-fd" : r.fd < 0 ? "neg-fd" : "", text: (r.fd > 0 ? "+" : "") + r.fd }),
+        el("td", { text: String(r.hb) }),
+        el("td", { class: "pts", text: String(r.pts) }),
+      ]))),
+    ]);
+    wrap.appendChild(el("div", { class: "card" }, [
+      el("h2", { text: `${poolName(tu.poolTab, t)} · ${t.name}` }),
+      el("div", { class: "table-wrap tr-tw" }, [table]),
+      t.qualify ? el("p", { class: "tr-legend" }, [el("span", { class: "dot", style: "background:#16a34a" }), `Top ${t.qualify} qualify  `, el("span", { class: "dot", style: "background:#c62828" }), "Eliminated"]) : null,
+      el("details", { class: "tr-key" }, [
+        el("summary", { text: "What the columns mean" }),
+        el("ul", {}, [
+          ["Pos", "Current rank in the pool"], ["MP", "Matches played"], ["W / D / L", draws ? "Won / drawn / lost (draws possible with an even number of frames)" : "Won / lost (odd frames: no draws)"],
+          ["FW / FL", "Frames won / lost"], ["FD", "Frame difference (FW − FL)"], ["HB", "Highest break in the pool"],
+          ["Pts", `Win ${t.ptsWin}, draw ${t.ptsDraw}`],
+        ].map(([k, v]) => el("li", {}, [el("b", { text: k }), ` — ${v}`]))),
+        el("p", { class: "muted small", text: "Ties are broken by: Pts → FD → FW → head-to-head → highest break." }),
+      ]),
+    ]));
+    return wrap;
+  }
+
+  // ---------- Pop-up: match details / live scoring / quick result / password ----------
+  function openTrm(modal) {
+    tu.modal = modal;
+    $("trm").classList.remove("hidden");
+    renderTrm();
+  }
+  function closeTrm() {
+    tu.modal = null; tu.frameEnd = false;
+    $("trm").classList.add("hidden");
+  }
+  $("trm").addEventListener("click", e => { if (e.target.id === "trm" && !(tu.modal && tu.modal.kind === "live")) { closeTrm(); renderTour(); } });
+
+  function renderTrm() {
+    const box = $("trm-modal");
+    if (!tu.modal) { $("trm").classList.add("hidden"); return; }
+    const t = curT();
+    box.innerHTML = "";
+    box.classList.toggle("trm-live", tu.modal.kind === "live");
+    if (tu.modal.kind === "pw") { box.appendChild(pwView()); return; }
+    if (tu.modal.kind === "player") { box.appendChild(playerView(tu.modal.pid)); return; }
+    if (tu.modal.kind === "pform") { if (!tu.admin) { closeTrm(); return; } box.appendChild(pformView(tu.modal.pid)); return; }
+    const m = t && byId(t, tu.modal.mid);
+    if (!m) { closeTrm(); return; }
+    const head = (title) => el("div", { class: "modal-head" }, [
+      el("h2", { id: "trm-title", text: title }),
+      el("button", { type: "button", class: "ghost", "aria-label": "Close", text: "✕", onclick: () => { closeTrm(); renderTour(); } }),
+    ]);
+    const title = m.stage === "ko" ? `Knockout · ${roundName(t.ko.find(r => r.includes(m.id)).length)}` : `${poolName(m.pool, t)} · Round ${m.round}`;
+    if (tu.modal.kind === "live" && m.live) { box.appendChild(liveView(t, m, head)); return; }
+    if (tu.modal.kind === "result") { box.appendChild(resultView(t, m, head(title))); return; }
+
+    // Match details
+    const w = winnerOf(m);
+    const ready = m.a && m.b && m.status !== "bye";
+    box.append(
+      head(title),
+      el("div", { class: "tr-vs" }, [
+        el("div", { class: "tr-vp" + (w === m.a && w ? " win" : "") }, [el("b", { text: m.a ? pname(t, m.a) : "TBD" }), el("span", { class: "tr-big", text: String(m.fa) }), el("small", { class: "muted", text: `HB ${m.hbA}` })]),
+        el("div", { class: "tr-vmid" }, [el("span", { text: "vs" }), el("small", { class: "muted", text: `Best of ${t.frames}` })]),
+        el("div", { class: "tr-vp" + (w === m.b && w ? " win" : "") }, [el("b", { text: m.b ? pname(t, m.b) : "TBD" }), el("span", { class: "tr-big", text: String(m.fb) }), el("small", { class: "muted", text: `HB ${m.hbB}` })]),
+      ]),
+      m.frameLog.length ? el("ol", { class: "tr-frames" }, m.frameLog.map((f, i) => el("li", {}, [
+        `Frame ${i + 1}: `, el("b", { text: `${f.a} – ${f.b}` }), f.w ? ` · ${pname(t, f.w === "a" ? m.a : m.b)}` : "",
+      ]))) : el("p", { class: "muted small", text: m.status === "bye" ? "Bye — goes straight through." : m.status === "done" ? "Result entered (no frame scores recorded)." : ready ? "Not played yet." : "Waiting for earlier results." }),
+    );
+    if (tu.admin && ready) {
+      box.appendChild(el("div", { class: "tr-stack" }, [
+        m.status !== "done" ? el("button", { type: "button", class: "primary big", "data-fk": "tr-live", text: m.status === "live" ? "▶ Resume live scoring" : "▶ Live score", onclick: () => { liveStart(t, m); tu.modal = { kind: "live", mid: m.id }; renderTour(); } }) : null,
+        el("button", { type: "button", class: "ghost", "data-fk": "tr-result", text: "✍ Enter result", onclick: () => { tu.modal = { kind: "result", mid: m.id }; renderTrm(); } }),
+        m.status === "done" || m.status === "live" ? el("button", { type: "button", class: "danger", text: "↺ Reset match", onclick: async () => {
+          const okGo = await askConfirm({ title: "Reset this match?", icon: "↺", confirmText: "Reset match", danger: true, message: "The result and frames for this match will be cleared." });
+          if (!okGo) return;
+          resetMatch(m); if (m.stage === "ko") propagateKO(t); touch(t); renderTour();
+        } }) : null,
+      ]));
+    } else if (!tu.admin && ready) {
+      box.appendChild(el("p", { class: "muted small", text: "Log in as admin to score this match." }));
+    }
+  }
+
+  function resultView(t, m, head) {
+    const n = need(t);
+    let fa = m.status === "done" ? m.fa : 0, fb = m.status === "done" ? m.fb : 0;
+    const hbA = el("input", { type: "number", inputmode: "numeric", min: "0", max: "147", value: String(m.hbA), "aria-label": `${pname(t, m.a)} highest break` });
+    const hbB = el("input", { type: "number", inputmode: "numeric", min: "0", max: "147", value: String(m.hbB), "aria-label": `${pname(t, m.b)} highest break` });
+    const err = el("p", { class: "trl-err", role: "alert" });
+    const wrap = el("div", {});
+    const draw = () => {
+      wrap.innerHTML = "";
+      wrap.append(
+        head,
+        el("p", { class: "muted small", text: `Best of ${t.frames}: first to ${n} frames${m.stage === "pool" && t.frames % 2 === 0 ? ` (or ${t.frames / 2}–${t.frames / 2} draw)` : ""}.` }),
+        el("div", { class: "tr-res" }, [
+          stepper(pname(t, m.a), fa, 0, n, v => { fa = v; draw(); }, false, "frames won"),
+          stepper(pname(t, m.b), fb, 0, n, v => { fb = v; draw(); }, false, "frames won"),
+        ]),
+        el("div", { class: "tr-res" }, [
+          el("label", {}, [`HB · ${pname(t, m.a)}`, hbA]),
+          el("label", {}, [`HB · ${pname(t, m.b)}`, hbB]),
+        ]),
+        err,
+        el("div", { class: "ask-actions" }, [
+          el("button", { type: "button", class: "ghost", text: "Back", onclick: () => { tu.modal = { kind: "match", mid: m.id }; renderTrm(); } }),
+          el("button", { type: "button", class: "primary", "data-fk": "tr-save", text: "Save result", onclick: () => {
+            const msg = validResult(t, m.stage, fa, fb);
+            if (msg) { err.textContent = msg; return; }
+            const ha = Math.min(147, Math.max(0, parseInt(hbA.value, 10) || 0)), hb = Math.min(147, Math.max(0, parseInt(hbB.value, 10) || 0));
+            Object.assign(m, { fa, fb, hbA: ha, hbB: hb, status: "done", live: null });
+            if (m.frameLog.length !== fa + fb) m.frameLog = [];
+            if (m.stage === "ko") propagateKO(t);
+            touch(t);
+            tu.modal = { kind: "match", mid: m.id };
+            renderTour();
+            toast("✔ Result saved");
+          } }),
+        ]),
+      );
+    };
+    draw();
+    return wrap;
+  }
+
+  function liveView(t, m, head) {
+    const L = m.live;
+    const rem = pointsRemaining(L), lead = Math.abs(L.sa - L.sb);
+    const behind = L.sa === L.sb ? null : L.sa < L.sb ? "a" : "b";
+    const panel = side => {
+      const on = L.turn === side, pid = side === "a" ? m.a : m.b;
+      return el("button", { type: "button", class: "tr-lp" + (on ? " on" : ""), "aria-pressed": String(on), "aria-label": `${pname(t, pid)}${on ? ", at the table" : ", tap to give the table"}`, onclick: () => { if (!on) { liveSwitch(t, m); renderTrm(); } } }, [
+        el("span", { class: "tr-ln", text: pname(t, pid) }),
+        el("span", { class: "tr-lf", text: `Frames ${side === "a" ? m.fa : m.fb}` }),
+        el("span", { class: "tr-ls", text: String(side === "a" ? L.sa : L.sb) }),
+        el("span", { class: "tr-lb", text: on ? `Break ${L.brk}` : `HB ${side === "a" ? m.hbA : m.hbB}` }),
+      ]);
+    };
+    const frameNo = m.fa + m.fb + 1;
+    const wrap = el("div", {}, [
+      head(`Frame ${frameNo} · Best of ${t.frames}`),
+      el("div", { class: "tr-lps" }, [panel("a"), panel("b")]),
+      el("div", { class: "tr-state", "aria-live": "polite" }, [
+        el("span", {}, ["Reds ", el("b", { text: String(L.reds) })]),
+        el("span", {}, ["On ", el("b", { text: onBall(L) })]),
+        el("span", {}, ["Remaining ", el("b", { text: String(rem) })]),
+        el("span", {}, ["Lead ", el("b", { text: String(lead) })]),
+        behind && lead > rem ? el("span", { class: "tr-snk", text: `${pname(t, behind === "a" ? m.a : m.b)} needs snookers` }) : null,
+      ]),
+    ]);
+    if (tu.frameEnd) {
+      const sides = ["a", "b"];
+      wrap.appendChild(el("div", { class: "tr-fe" }, [
+        el("p", { text: `Who won frame ${frameNo}?` }),
+        ...sides.map(s => el("button", {
+          type: "button", class: (s === "a" ? L.sa > L.sb : L.sb > L.sa) ? "primary big" : "ghost big", "data-fk": `tr-fw-${s}`,
+          text: `🏆 ${pname(t, s === "a" ? m.a : m.b)} (${L.sa}–${L.sb})`,
+          onclick: () => { const finished = liveFrameWon(t, m, s); if (finished) tu.modal = { kind: "match", mid: m.id }; renderTour(); },
+        })),
+        el("button", { type: "button", class: "ghost", text: "Cancel", onclick: () => { tu.frameEnd = false; renderTrm(); } }),
+      ]));
+      return wrap;
+    }
+    wrap.append(
+      el("div", { class: "balls tr-balls" }, SNK.map(b => el("button", {
+        type: "button", class: `ball ${b.c}`, "data-fk": `tr-ball-${b.v}`, "aria-label": `Pot ${b.n}, ${b.v}`,
+        onclick: () => { livePot(t, m, b.v); renderTrm(); },
+      }, [el("span", { text: String(b.v) }), el("small", { text: b.n })]))),
+      el("div", { class: "tr-fouls" }, [
+        el("span", { class: "muted small", text: "Foul → opponent" }),
+        ...[4, 5, 6, 7].map(v => el("button", { type: "button", class: "ghost", "data-fk": `tr-foul-${v}`, text: `+${v}`, "aria-label": `Foul, ${v} to opponent`, onclick: () => { liveFoul(t, m, v); renderTrm(); } })),
+      ]),
+      el("div", { class: "tr-acts" }, [
+        el("button", { type: "button", class: "ghost", text: "↶ Undo", disabled: !tu.undo.length, onclick: () => { liveUndo(t, m); renderTrm(); } }),
+        el("button", { type: "button", class: "ghost", "data-fk": "tr-visit", text: "⏭ End visit", onclick: () => { liveSwitch(t, m); renderTrm(); } }),
+        el("button", { type: "button", class: "ghost", text: "−1 Red", disabled: L.reds === 0, title: "A red left the table without scoring (e.g. on a foul)", onclick: () => { liveRedOff(t, m); renderTrm(); } }),
+        el("button", { type: "button", class: "primary", "data-fk": "tr-endframe", text: "🏁 End frame", onclick: () => { tu.frameEnd = true; renderTrm(); } }),
+      ]),
+    );
+    return wrap;
+  }
+
+  function pwView() {
+    const u = el("input", { type: "text", value: adminCreds().user, autocomplete: "username", autocapitalize: "none", "aria-label": "Username" });
+    const p1 = el("input", { type: "password", autocomplete: "new-password", "aria-label": "New password" });
+    const p2 = el("input", { type: "password", autocomplete: "new-password", "aria-label": "Repeat new password" });
+    const err = el("p", { class: "trl-err", role: "alert" });
+    return el("div", {}, [
+      el("div", { class: "modal-head" }, [el("h2", { id: "trm-title", text: "🔑 Admin login" }), el("button", { type: "button", class: "ghost", "aria-label": "Close", text: "✕", onclick: () => { closeTrm(); renderTour(); } })]),
+      el("p", { class: "muted small", text: "Changes the login on this device only." }),
+      el("label", {}, ["Username", u]), el("label", {}, ["New password", p1]), el("label", {}, ["Repeat new password", p2]),
+      err,
+      el("div", { class: "ask-actions" }, [
+        el("button", { type: "button", class: "ghost", text: "Cancel", onclick: () => { closeTrm(); renderTour(); } }),
+        el("button", { type: "button", class: "primary", text: "Save", onclick: () => {
+          const user = u.value.trim().toLowerCase();
+          if (!/^[a-z0-9._-]{3,30}$/.test(user)) { err.textContent = "Username: 3–30 letters or numbers."; return; }
+          if (p1.value.length < 8) { err.textContent = "Password must be at least 8 characters."; return; }
+          if (p1.value !== p2.value) { err.textContent = "Passwords don't match."; return; }
+          try { localStorage.setItem(ADMIN_KEY, JSON.stringify({ user, hash: credHash(user, p1.value) })); } catch (_) {}
+          closeTrm(); renderTour(); toast("🔑 Admin login updated");
+        } }),
+      ]),
+    ]);
+  }
+
+  // Escape / shortcuts while the tournament page is open (runs before the game's shortcuts)
+  document.addEventListener("keydown", e => {
+    const loginOpen = !$("trlogin").classList.contains("hidden");
+    if ((!tu.open && !loginOpen) || askResolve) return;
+    if (e.key === "Escape") {
+      if (loginOpen) closeLogin();
+      else if (tu.modal && tu.frameEnd) { tu.frameEnd = false; renderTrm(); }
+      else if (tu.modal) { closeTrm(); renderTour(); }
+      else hideTour();
+      e.stopImmediatePropagation();
+      return;
+    }
+    // Let typing reach the tournament's own inputs (e.g. Enter in "Add players")
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName || "")) return;
+    e.stopImmediatePropagation(); // don't let game shortcuts (1–7, E, U…) fire behind the page
+  }, true);
 
   // ================= Offline support =================
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
