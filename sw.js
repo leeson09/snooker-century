@@ -1,6 +1,6 @@
 // Offline support for The Snooker Century Game.
 // Bump CACHE when files change so phones pick up the new version.
-const CACHE = "snooker-century-v29";
+const CACHE = "snooker-century-v31";
 const ASSETS = [
   "./",
   "./index.html",
@@ -29,7 +29,17 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   const req = event.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
+  if (req.method !== "GET") return;
+
+  // Firebase library files (versioned, never change): cache them so the app opens offline.
+  if (req.url.startsWith("https://www.gstatic.com/firebasejs/")) {
+    event.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
+      return res;
+    })));
+    return;
+  }
+  if (new URL(req.url).origin !== self.location.origin) return;
 
   // Pages: network first so updates show up, fall back to cache when offline.
   if (req.mode === "navigate") {

@@ -1164,6 +1164,8 @@
   .tr-hist li { padding: 0.4rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
   .tr-champ { color: var(--gold); font-weight: 900; }
   #tr-dbq { margin: 0.5rem 0; }
+  .tr-livenow { margin: 0.5rem 0; padding: 0.5rem 0.7rem; border-radius: 12px; background: color-mix(in srgb, var(--danger, #c62828) 10%, transparent); font-weight: 700; }
+  .tr-livenow .tr-live { position: static; display: inline-block; margin-right: 0.3rem; }
   .tr-addrow input { flex: 1; min-width: 0; }
   .tr-addrow button { flex: none; }
   .tr-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
@@ -1610,7 +1612,7 @@
     { name: "Maroon", value: 21, cls: "maroon", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 29; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 31; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -3320,6 +3322,29 @@
   const ADMIN_SESSION = "snooker-century-admin-session";
   // Default login: admin / Admin@123 — only a hash is stored. Change it in Tournament → Setup → Admin.
   const ADMIN_DEFAULT = { user: "admin", hash: "c432fcc378f13839fa8ccaaed8e6b3477f6860eb79d6ff9db715c97a2257ed40" };
+
+  // ---------- Online storage (Firebase) ----------
+  // Paste your Firebase web config here so everyone who opens the app sees the same tournaments.
+  // Leave it as null to keep tournaments on this device only (the old behaviour).
+  // Example: const FIREBASE_CONFIG = { apiKey: "…", authDomain: "…", projectId: "…", storageBucket: "…", messagingSenderId: "…", appId: "…" };
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyArYB2e4FpRWURtNt-OxOAPTXm3M3BN6mY",
+    authDomain: "snooker-century.firebaseapp.com",
+    projectId: "snooker-century",
+    storageBucket: "snooker-century.firebasestorage.app",
+    messagingSenderId: "533956181560",
+    appId: "1:533956181560:web:24188b98f64369b019f0cd",
+  };
+  const CLOUD_SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+  const BACKUP_KEY = "snooker-century-precloud-backup-v1";   // this device's data from before going online
+  const MIGRATED_KEY = "snooker-century-cloud-migrated-v1";
+  const cloud = {
+    on: !!(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId),
+    sdk: null, fs: null, auth: null, user: null, status: "local", err: "", starting: false, loggingIn: false,
+    gotT: false, gotP: false, serverT: false, serverP: false,
+    sentT: new Map(), sentP: new Map(), sentPh: new Map(), phones: new Map(), timers: new Map(),
+    unsubPh: null, needRender: false,
+  };
   const POOLS = "ABCDEFGH".split("");
   const SNK = [
     { v: 1, n: "Red", c: "red1" }, { v: 2, n: "Yellow", c: "yellow" }, { v: 3, n: "Green", c: "green" },
@@ -3437,6 +3462,7 @@
   function saveTours() {
     try { localStorage.setItem(TOUR_KEY, JSON.stringify(tours)); }
     catch (_) { toast("⚠️ Couldn't save — phone storage is full"); }
+    cloudPushTours();
   }
 
   // ---------- Player database (shared by all tournaments on this device) ----------
@@ -3463,6 +3489,7 @@
   function saveDb() {
     try { localStorage.setItem(PDB_KEY, JSON.stringify(pdb)); }
     catch (_) { toast("⚠️ Couldn't save — phone storage is full"); }
+    cloudPushPlayers();
   }
   const dbById = id => pdb.find(p => p.id === id) || null;
   const dbByPhone = ph => (ph ? pdb.find(p => p.phone === ph) || null : null);
@@ -3526,7 +3553,8 @@
 
   const tu = {
     open: false, tab: "setup", cur: null, poolTab: 0, fixFilter: "all",
-    admin: (() => { try { return sessionStorage.getItem(ADMIN_SESSION) === "1"; } catch (_) { return false; } })(),
+    // Online mode: admin comes only from a verified Firebase login, never from this flag.
+    admin: cloud.on ? false : (() => { try { return sessionStorage.getItem(ADMIN_SESSION) === "1"; } catch (_) { return false; } })(),
     modal: null,      // { kind: "match" | "live" | "result" | "pw", mid }
     undo: [], frameEnd: false, loginNext: null, addFee: "unpaid", dbq: "",
   };
@@ -3809,7 +3837,7 @@
   // Brackets & pools, Fixtures, Points table and Player database open straight away (view only unless logged in).
   const openTourTab = tab => () => { tu.tab = tab; showTour(); };
   function showTour() {
-    tours = loadTours(); pdb = loadDb();
+    if (!cloud.on) { tours = loadTours(); pdb = loadDb(); }
     if (!curT()) tu.cur = tours.length ? tours[0].id : null;
     tu.open = true; ui.tour = true;
     $("tour").classList.remove("hidden");
@@ -3838,19 +3866,24 @@
   }
   function setAdmin(on) {
     tu.admin = on;
+    if (cloud.on) return;
     try { if (on) sessionStorage.setItem(ADMIN_SESSION, "1"); else sessionStorage.removeItem(ADMIN_SESSION); } catch (_) {}
+  }
+  function loginOk() {
+    $("trl-pass").value = "";
+    closeLogin();
+    toast("🔓 Logged in as admin");
+    const next = tu.loginNext; tu.loginNext = null;
+    if (next) next(); else if (tu.open) renderTour();
   }
   $("trl-form").addEventListener("submit", e => {
     e.preventDefault();
+    if (cloud.on) { cloudLogin(); return; }
     const u = $("trl-user").value.trim().toLowerCase(), p = $("trl-pass").value;
     const c = adminCreds();
     if (u === c.user && credHash(u, p) === c.hash) {
       setAdmin(true);
-      $("trl-pass").value = "";
-      closeLogin();
-      toast("🔓 Logged in as admin");
-      const next = tu.loginNext; tu.loginNext = null;
-      if (next) next(); else if (tu.open) renderTour();
+      loginOk();
     } else {
       $("trl-err").textContent = "Wrong username or password.";
       $("trl-pass").value = "";
@@ -3865,7 +3898,10 @@
   $("tr-lock").addEventListener("click", async () => {
     if (!tu.admin) return openLogin(null);
     const okGo = await askConfirm({ title: "Log out of admin?", icon: "🔒", confirmText: "Log out", message: "You can still view everything. Log in again to make changes." });
-    if (okGo) { setAdmin(false); toast("🔒 Logged out"); renderTour(); }
+    if (!okGo) return;
+    if (cloud.on) { flushTours(); deactivateAdmin(); if (cloud.auth) cloud.sdk.signOut(cloud.auth).catch(() => {}); }
+    else setAdmin(false);
+    toast("🔒 Logged out"); renderTour();
   });
   actions.tournaments = openTournaments;
   actions["tr-pools"] = openTourTab("pools");
@@ -3875,10 +3911,11 @@
 
   // ---------- Tournament page rendering ----------
   const TABS = [["setup", "⚙️ Setup"], ["pools", "🏆 Brackets & pools"], ["fixtures", "📅 Fixtures"], ["table", "📊 Points table"], ["players", "👤 Players"]];
-  function renderTour() {
+  function renderTour(keepModal) {
     if (!tu.open) return;
+    cloud.needRender = false;
     const t = curT();
-    $("tr-sub").textContent = t ? `${t.name} · ${tu.admin ? "Admin" : "View only"}` : (tu.admin ? "Admin" : "View only");
+    $("tr-sub").textContent = subText(t);
     $("tr-lock").textContent = tu.admin ? "🔓" : "🔒";
     $("tr-lock").setAttribute("aria-label", tu.admin ? "Log out of admin" : "Admin login");
     const tabs = $("tr-tabs");
@@ -3889,13 +3926,16 @@
     })));
     const main = $("tr-main");
     main.innerHTML = "";
-    if (tu.tab === "players") { main.appendChild(dbView()); renderTrm(); return; }
+    if (tu.tab === "players") { main.appendChild(dbView()); if (!keepModal) renderTrm(); return; }
     main.appendChild(pickerCard());
-    if (!t) { main.appendChild(emptyCard()); renderTrm(); return; }
+    if (!t) { main.appendChild(emptyCard()); if (!keepModal) renderTrm(); return; }
     const view = { setup: setupView, pools: poolsView, fixtures: fixturesView, table: tableView }[tu.tab];
     main.appendChild(view(t));
-    renderTrm();
+    if (!keepModal) renderTrm();
   }
+
+  const cloudLabel = () => ({ connecting: "☁️ Connecting…", live: "☁️ Live", offline: "☁️ Offline", error: "⚠️ Online error" })[cloud.status] || "";
+  const subText = t => [t ? t.name : null, tu.admin ? "Admin" : "View only", cloud.on ? cloudLabel() : null].filter(Boolean).join(" · ");
 
   function pickerCard() {
     const sel = el("select", { id: "tr-pick", "aria-label": "Select tournament", onchange: e => { tu.cur = e.target.value; tu.poolTab = 0; tu.fixFilter = "all"; renderTour(); } },
@@ -3912,10 +3952,10 @@
   function emptyCard() {
     return el("div", { class: "card tr-empty" }, [
       el("h2", { text: "No tournaments yet" }),
-      el("p", { class: "muted", text: tu.admin ? "Create one to set up players, pools and fixtures." : "Ask the admin to share a tournament file, then import it here." }),
+      el("p", { class: "muted", text: tu.admin ? "Create one to set up players, pools and fixtures." : cloud.on ? "The admin hasn't created any tournaments yet." : "Ask the admin to share a tournament file, then import it here." }),
       el("div", { class: "row" }, [
         tu.admin ? el("button", { type: "button", class: "primary", text: "＋ Create tournament", onclick: newTournament }) : el("button", { type: "button", class: "primary", text: "🔓 Admin login", onclick: () => openLogin(null) }),
-        el("button", { type: "button", class: "ghost", text: "📥 Import tournament", onclick: () => $("tr-file").click() }),
+        !cloud.on || tu.admin ? el("button", { type: "button", class: "ghost", text: "📥 Import tournament", onclick: () => $("tr-file").click() }) : null,
         tu.admin ? demoButton() : null,
       ]),
     ]);
@@ -4286,14 +4326,16 @@
   function shareCard(t) {
     return el("div", { class: "card" }, [
       el("h2", { text: "Share & data" }),
-      el("p", { class: "muted small", text: "Data is saved on this device. To show it on other phones, share the file and import it there (re-share to update)." }),
+      el("p", { class: "muted small", text: cloud.on ? "Stored online: everyone who opens the app sees the same tournaments, and changes show up on every device within a few seconds." : "Data is saved on this device. To show it on other phones, share the file and import it there (re-share to update)." }),
       el("div", { class: "tr-stack" }, [
         el("button", { type: "button", class: "ghost", text: "📤 Share tournament file", onclick: () => shareTour(t) }),
-        el("button", { type: "button", class: "ghost", text: "📥 Import tournament file", onclick: () => $("tr-file").click() }),
-        tu.admin ? el("button", { type: "button", class: "ghost", text: "🔑 Change admin password", onclick: () => openTrm({ kind: "pw" }) }) : null,
+        !cloud.on || tu.admin ? el("button", { type: "button", class: "ghost", text: "📥 Import tournament file", onclick: () => $("tr-file").click() }) : null,
+        tu.admin ? (cloud.on
+          ? el("button", { type: "button", class: "ghost", text: "🔑 Reset admin password", onclick: cloudResetPassword })
+          : el("button", { type: "button", class: "ghost", text: "🔑 Change admin password", onclick: () => openTrm({ kind: "pw" }) })) : null,
         tu.admin ? demoButton() : null,
         tu.admin ? el("button", { type: "button", class: "danger", text: "🗑 Delete this tournament", onclick: async () => {
-          const okGo = await askConfirm({ title: `Delete “${t.name}”?`, icon: "🗑", confirmText: "Delete tournament", danger: true, message: "Players, fixtures, results and the points table for this tournament will be removed from this device. This can't be undone." });
+          const okGo = await askConfirm({ title: `Delete “${t.name}”?`, icon: "🗑", confirmText: "Delete tournament", danger: true, message: `Players, fixtures, results and the points table for this tournament will be ${cloud.on ? "deleted for everyone" : "removed from this device"}. This can't be undone.` });
           if (!okGo) return;
           tours = tours.filter(x => x.id !== t.id); saveTours();
           tu.cur = tours.length ? tours[0].id : null; tu.tab = "setup";
@@ -4540,6 +4582,10 @@
         el("div", { class: "tr-vmid" }, [el("span", { text: "vs" }), el("small", { class: "muted", text: `Best of ${t.frames}` })]),
         el("div", { class: "tr-vp" + (w === m.b && w ? " win" : "") }, [el("b", { text: m.b ? pname(t, m.b) : "TBD" }), el("span", { class: "tr-big", text: String(m.fb) }), el("small", { class: "muted", text: `HB ${m.hbB}` })]),
       ]),
+      m.status === "live" && m.live ? el("p", { class: "tr-livenow" }, [
+        el("span", { class: "tr-live", text: "LIVE" }), ` Frame ${m.fa + m.fb + 1}: `, el("b", { text: `${m.live.sa} – ${m.live.sb}` }),
+        ` · ${pname(t, m.live.turn === "a" ? m.a : m.b)} at the table, break ${m.live.brk}`,
+      ]) : null,
       m.frameLog.length ? el("ol", { class: "tr-frames" }, m.frameLog.map((f, i) => el("li", {}, [
         `Frame ${i + 1}: `, el("b", { text: `${f.a} – ${f.b}` }), f.w ? ` · ${pname(t, f.w === "a" ? m.a : m.b)}` : "",
       ]))) : el("p", { class: "muted small", text: m.status === "bye" ? "Bye — goes straight through." : m.status === "done" ? "Result entered (no frame scores recorded)." : ready ? "Not played yet." : "Waiting for earlier results." }),
@@ -4698,6 +4744,308 @@
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName || "")) return;
     e.stopImmediatePropagation(); // don't let game shortcuts (1–7, E, U…) fire behind the page
   }, true);
+
+  // ================= Online storage (Firebase) =================
+  // Firestore layout: tournaments/{id} = { data: JSON, name, updated } (anyone can read)
+  //                   players/{id}     = { id, name, created, demo }   (anyone can read)
+  //                   phones/{id}      = { phone }                     (admins only)
+  //                   admins/{uid}     = {}                            (added by hand in the Firebase console)
+  // Only admins can write; the security rules in Firebase enforce that, not this code.
+  function loadSdk() {
+    return Promise.all(["app", "auth", "firestore"].map(n => import(`${CLOUD_SDK}firebase-${n}.js`))).then(ms => Object.assign({}, ...ms));
+  }
+  function cloudStatus(st, err) {
+    if (err) cloud.err = err;
+    if (cloud.status === st) return;
+    cloud.status = st;
+    if (tu.open) $("tr-sub").textContent = subText(curT());
+  }
+  function cloudWriteError(e) {
+    const c = String((e && (e.code || e.message)) || "error");
+    toast(/permission/.test(c) ? "⚠️ Not saved online: this account isn't allowed to make changes" : `⚠️ Not saved online (${c})`);
+  }
+  const tourJson = t => JSON.stringify(t);
+  const playerJson = p => JSON.stringify([p.name, p.created, !!p.demo]);
+
+  // Push changed tournaments (debounced so live scoring doesn't write on every pot).
+  function cloudPushTours() {
+    if (!cloud.fs || !cloud.gotT || !tu.admin) return;
+    const ids = new Set();
+    tours.forEach(t => {
+      ids.add(t.id);
+      if (cloud.sentT.get(t.id) === tourJson(t)) return;
+      clearTimeout(cloud.timers.get(t.id));
+      cloud.timers.set(t.id, setTimeout(() => writeTour(t.id), 400));
+    });
+    [...cloud.sentT.keys()].forEach(id => {
+      if (ids.has(id)) return;
+      cloud.sentT.delete(id);
+      clearTimeout(cloud.timers.get(id)); cloud.timers.delete(id);
+      cloud.sdk.deleteDoc(cloud.sdk.doc(cloud.fs, "tournaments", id)).catch(cloudWriteError);
+    });
+  }
+  function writeTour(id) {
+    clearTimeout(cloud.timers.get(id));
+    cloud.timers.delete(id);
+    const t = tours.find(x => x.id === id);
+    if (!t || !cloud.fs || !tu.admin) return;
+    const j = tourJson(t);
+    if (cloud.sentT.get(id) === j) return;
+    cloud.sentT.set(id, j);
+    cloud.sdk.setDoc(cloud.sdk.doc(cloud.fs, "tournaments", id), { data: j, name: t.name, updated: t.updated }).catch(cloudWriteError);
+  }
+  function flushTours() { [...cloud.timers.keys()].forEach(writeTour); }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flushTours(); });
+  window.addEventListener("pagehide", flushTours);
+
+  function cloudPushPlayers() {
+    if (!cloud.fs || !cloud.gotP || !tu.admin) return;
+    const { doc } = cloud.sdk, ops = [], ids = new Set();
+    pdb.forEach(p => {
+      ids.add(p.id);
+      const j = playerJson(p);
+      if (cloud.sentP.get(p.id) !== j) {
+        cloud.sentP.set(p.id, j);
+        ops.push(b => b.set(doc(cloud.fs, "players", p.id), { id: p.id, name: p.name, created: p.created, demo: !!p.demo }));
+      }
+      const ph = p.phone || "";
+      if ((cloud.sentPh.get(p.id) || "") !== ph) {
+        cloud.sentPh.set(p.id, ph);
+        ops.push(b => (ph ? b.set(doc(cloud.fs, "phones", p.id), { phone: ph }) : b.delete(doc(cloud.fs, "phones", p.id))));
+      }
+    });
+    [...cloud.sentP.keys()].forEach(id => {
+      if (ids.has(id)) return;
+      cloud.sentP.delete(id); cloud.sentPh.delete(id);
+      ops.push(b => { b.delete(doc(cloud.fs, "players", id)); b.delete(doc(cloud.fs, "phones", id)); });
+    });
+    for (let i = 0; i < ops.length; i += 200) {
+      const b = cloud.sdk.writeBatch(cloud.fs);
+      ops.slice(i, i + 200).forEach(f => f(b));
+      b.commit().catch(cloudWriteError);
+    }
+  }
+
+  // Keep the same objects when data arrives, so open pop-ups keep pointing at live data.
+  function adoptTour(local, fresh) {
+    const old = new Map(local.matches.map(m => [m.id, m]));
+    fresh.matches = fresh.matches.map(m => (old.has(m.id) ? Object.assign(old.get(m.id), m) : m));
+    Object.keys(local).forEach(k => delete local[k]);
+    return Object.assign(local, fresh);
+  }
+  function onTours(snap) {
+    const fromCache = snap.metadata.fromCache;
+    if (cloud.status !== "error" || !fromCache) cloudStatus(fromCache ? "offline" : "live");
+    if (fromCache && !snap.size && !cloud.gotT) return; // nothing saved yet on this device; wait for the server
+    const local = new Map(tours.map(t => [t.id, t])), next = [];
+    cloud.sentT.clear();
+    snap.forEach(d => {
+      let fresh = null;
+      try { fresh = sanitizeTour(JSON.parse(String((d.data() || {}).data))); } catch (_) { fresh = null; }
+      if (!fresh || fresh.id !== d.id) return;
+      const j = tourJson(fresh), mine = local.get(d.id);
+      cloud.sentT.set(d.id, j);
+      if (mine && cloud.timers.has(d.id)) { next.push(mine); return; } // our newer edit is about to be saved
+      next.push(mine ? (tourJson(mine) === j ? mine : adoptTour(mine, fresh)) : fresh);
+    });
+    tours.forEach(t => { if (cloud.timers.has(t.id) && !cloud.sentT.has(t.id)) next.push(t); }); // just created here
+    next.sort((a, b) => b.created - a.created);
+    tours = next;
+    cloud.gotT = true;
+    if (!fromCache) cloud.serverT = true;
+    try { localStorage.setItem(TOUR_KEY, JSON.stringify(tours)); } catch (_) {}
+    if (!curT()) tu.cur = tours.length ? tours[0].id : null;
+    cloudRefresh();
+    maybeMigrate();
+  }
+  function onPlayers(snap) {
+    const fromCache = snap.metadata.fromCache;
+    if (fromCache && !snap.size && !cloud.gotP) return;
+    const old = new Map(pdb.map(p => [p.id, p])), next = [], seen = new Set();
+    cloud.sentP.clear();
+    snap.forEach(d => {
+      const v = d.data() || {};
+      if (!PID_RE.test(d.id) || typeof v.name !== "string") return;
+      const fresh = { id: d.id, name: cleanName(v.name, "PLAYER"), created: Number.isFinite(v.created) ? v.created : Date.now(), demo: v.demo === true };
+      cloud.sentP.set(d.id, playerJson(fresh));
+      let ph = cloud.phones.get(d.id) || "";
+      if (seen.has(ph)) ph = "";
+      if (ph) seen.add(ph);
+      fresh.phone = ph;
+      next.push(old.has(d.id) ? Object.assign(old.get(d.id), fresh) : fresh);
+    });
+    pdb = next;
+    cloud.gotP = true;
+    if (!fromCache) cloud.serverP = true;
+    try { localStorage.setItem(PDB_KEY, JSON.stringify(pdb)); } catch (_) {}
+    cloudRefresh();
+    maybeMigrate();
+  }
+  function onPhones(snap) {
+    cloud.phones.clear(); cloud.sentPh.clear();
+    snap.forEach(d => {
+      const ph = normPhone((d.data() || {}).phone);
+      if (PID_RE.test(d.id) && validPhone(ph)) { cloud.phones.set(d.id, ph); cloud.sentPh.set(d.id, ph); }
+    });
+    pdb.forEach(p => { p.phone = cloud.phones.get(p.id) || ""; });
+    try { localStorage.setItem(PDB_KEY, JSON.stringify(pdb)); } catch (_) {}
+    cloudRefresh();
+  }
+  // Redraw after new data arrives, without wiping something the admin is typing.
+  function cloudRefresh() {
+    if (!tu.open) return;
+    const a = document.activeElement;
+    if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && ($("tour").contains(a) || $("trm").contains(a))) {
+      cloud.needRender = true;
+      $("tr-sub").textContent = subText(curT());
+      return;
+    }
+    const k = tu.modal && tu.modal.kind;
+    renderTour(k === "result" || k === "pform" || k === "pw");
+  }
+  document.addEventListener("focusout", () => setTimeout(() => { if (cloud.needRender) cloudRefresh(); }, 60));
+
+  // ---------- Admin login (Firebase Authentication + admins/{uid}) ----------
+  const synced = () => cloud.gotT && cloud.gotP;
+  function whenSynced(ms = 15000) {
+    return new Promise(res => {
+      const t0 = Date.now();
+      (function chk() { if (synced()) res(true); else if (Date.now() - t0 > ms) res(false); else setTimeout(chk, 150); })();
+    });
+  }
+  async function verifyAdmin(user) {
+    try { return (await cloud.sdk.getDoc(cloud.sdk.doc(cloud.fs, "admins", user.uid))).exists(); }
+    catch (_) { return null; } // couldn't check (offline or rules missing)
+  }
+  async function activateAdmin(user) {
+    const r = await verifyAdmin(user);
+    if (r !== true) return r;
+    if (!(await whenSynced())) return "sync";
+    setAdmin(true);
+    if (!cloud.unsubPh) cloud.unsubPh = cloud.sdk.onSnapshot(cloud.sdk.collection(cloud.fs, "phones"), onPhones, e => toast(`⚠️ Couldn't load phone numbers (${(e && e.code) || "error"})`));
+    cloudRefresh();
+    maybeMigrate();
+    return true;
+  }
+  function deactivateAdmin() {
+    flushTours();
+    setAdmin(false);
+    if (cloud.unsubPh) { cloud.unsubPh(); cloud.unsubPh = null; }
+    cloud.phones.clear(); cloud.sentPh.clear();
+    pdb.forEach(p => { p.phone = ""; }); // phone numbers don't stay on a logged-out device
+    try { localStorage.setItem(PDB_KEY, JSON.stringify(pdb)); } catch (_) {}
+    cloudRefresh();
+  }
+  async function cloudLogin() {
+    const err = $("trl-err"), email = $("trl-user").value.trim(), pass = $("trl-pass").value;
+    if (!cloud.auth) { err.textContent = cloud.status === "offline" ? "No internet connection." : "Still connecting… try again in a moment."; return; }
+    if (!email || !pass) { err.textContent = "Enter your email and password."; return; }
+    err.textContent = "Logging in…";
+    cloud.loggingIn = true;
+    try {
+      const cred = await cloud.sdk.signInWithEmailAndPassword(cloud.auth, email, pass);
+      err.textContent = "Checking admin access…";
+      const r = await activateAdmin(cred.user);
+      if (r !== true) {
+        await cloud.sdk.signOut(cloud.auth).catch(() => {});
+        err.textContent = r === false ? "This account isn't an admin." : r === "sync" ? "Couldn't load the online data. Check your connection and try again." : "Couldn't check admin access. Check your connection and try again.";
+        return;
+      }
+      loginOk();
+    } catch (e) {
+      const c = String((e && e.code) || "");
+      err.textContent = /invalid-credential|wrong-password|user-not-found|invalid-email|missing-password/.test(c) ? "Wrong email or password."
+        : /too-many-requests/.test(c) ? "Too many attempts. Wait a few minutes and try again."
+        : /network/.test(c) ? "No internet connection." : "Login failed. Try again.";
+      $("trl-pass").value = "";
+      buzz([40, 40]);
+    } finally { cloud.loggingIn = false; }
+  }
+  async function cloudResetPassword() {
+    const email = cloud.user && cloud.user.email;
+    if (!email) return;
+    const okGo = await askConfirm({ title: "Reset admin password?", icon: "🔑", confirmText: "Send email", message: `A link to set a new password will be emailed to ${email}.` });
+    if (!okGo) return;
+    try { await cloud.sdk.sendPasswordResetEmail(cloud.auth, email); toast("📧 Reset email sent"); }
+    catch (e) { toast(`⚠️ Couldn't send the email (${(e && e.code) || "error"})`); }
+  }
+
+  // ---------- First admin login on a device that already had data: offer to upload it ----------
+  let migrating = false;
+  async function maybeMigrate() {
+    if (!tu.admin || !cloud.serverT || !cloud.serverP || migrating || askResolve) return;
+    try { if (localStorage.getItem(MIGRATED_KEY)) return; } catch (_) { return; }
+    let b = null;
+    try { b = JSON.parse(localStorage.getItem(BACKUP_KEY) || "null"); } catch (_) { b = null; }
+    const bt = b && Array.isArray(b.tours) ? b.tours.map(sanitizeTour).filter(Boolean) : [];
+    const bp = b && Array.isArray(b.pdb) ? b.pdb : [];
+    const newT = bt.filter(t => !tours.some(x => x.id === t.id));
+    const newP = bp.filter(x => x && typeof x.id === "string" && PID_RE.test(x.id) && typeof x.name === "string" && !dbById(x.id));
+    if (!newT.length && !newP.length) { try { localStorage.setItem(MIGRATED_KEY, "1"); } catch (_) {} return; }
+    migrating = true;
+    const okGo = await askConfirm({ title: "Upload this device's data?", icon: "☁️", confirmText: "Upload",
+      message: `This device has ${newT.length} tournament${newT.length === 1 ? "" : "s"} and ${newP.length} player${newP.length === 1 ? "" : "s"} saved from before. Upload them so everyone can see them?` });
+    migrating = false;
+    try { localStorage.setItem(MIGRATED_KEY, "1"); } catch (_) {}
+    if (!okGo) { toast("Not uploaded. A backup stays on this device."); return; }
+    if (!tu.admin) return;
+    newP.forEach(x => {
+      let ph = normPhone(x.phone);
+      if (!validPhone(ph) || dbByPhone(ph)) ph = "";
+      pdb.push({ id: x.id, name: cleanName(x.name, "PLAYER"), phone: ph, created: Number.isFinite(x.created) ? x.created : Date.now(), demo: x.demo === true });
+    });
+    tours = [...newT, ...tours];
+    if (!curT() && tours.length) tu.cur = tours[0].id;
+    saveDb(); saveTours();
+    renderTour();
+    toast(`☁️ Uploaded ${newT.length} tournament${newT.length === 1 ? "" : "s"} and ${newP.length} player${newP.length === 1 ? "" : "s"}`);
+  }
+
+  async function cloudInit() {
+    if (!cloud.on || cloud.starting || cloud.fs) return;
+    cloud.starting = true;
+    cloudStatus("connecting");
+    let sdk;
+    try { sdk = await loadSdk(); }
+    catch (_) {
+      cloud.starting = false;
+      cloudStatus("offline");
+      window.addEventListener("online", cloudInit, { once: true }); // first use with no internet: try again later
+      return;
+    }
+    try {
+      const app = sdk.initializeApp(FIREBASE_CONFIG);
+      let fs;
+      try { fs = sdk.initializeFirestore(app, { localCache: sdk.persistentLocalCache({ tabManager: sdk.persistentMultipleTabManager() }) }); }
+      catch (_) { fs = sdk.getFirestore(app); }
+      cloud.sdk = sdk; cloud.fs = fs; cloud.auth = sdk.getAuth(app);
+      const fail = e => { cloudStatus("error", String((e && (e.code || e.message)) || "error")); toast(`⚠️ Online storage error (${cloud.err})`); };
+      const opts = { includeMetadataChanges: true };
+      sdk.onSnapshot(sdk.collection(fs, "tournaments"), opts, onTours, fail);
+      sdk.onSnapshot(sdk.collection(fs, "players"), opts, onPlayers, fail);
+      sdk.onAuthStateChanged(cloud.auth, async user => {
+        cloud.user = user;
+        if (!user) { if (tu.admin) { deactivateAdmin(); toast("🔒 Logged out"); } return; }
+        if (tu.admin || cloud.loggingIn) return;
+        const r = await activateAdmin(user); // stays logged in after a reload
+        if (r === false) sdk.signOut(cloud.auth).catch(() => {});
+      });
+    } catch (e) {
+      cloudStatus("error", String((e && (e.code || e.message)) || "error"));
+    }
+    cloud.starting = false;
+  }
+  if (cloud.on) {
+    // Keep a copy of what this device had before going online (the online data replaces it on screen).
+    try {
+      if (!localStorage.getItem(BACKUP_KEY)) localStorage.setItem(BACKUP_KEY, JSON.stringify({ saved: Date.now(), tours: loadTours(), pdb: loadDb() }));
+    } catch (_) {}
+    const u = $("trl-user");
+    u.type = "email"; u.setAttribute("autocomplete", "email"); u.setAttribute("inputmode", "email");
+    const lab = document.querySelector('label[for="trl-user"]');
+    if (lab) lab.textContent = "Email";
+    cloudInit();
+  }
 
   // ================= Offline support =================
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
