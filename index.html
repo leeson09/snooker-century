@@ -1104,7 +1104,7 @@
   .tr-main { max-width: 900px; margin: 0 auto; padding: 0.5rem max(0.75rem, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 2rem) max(0.75rem, env(safe-area-inset-left)); }
   .tr-pick label { margin-top: 0; }
   .tr-pick .row { flex-wrap: nowrap; }
-  select, input[type="password"] {
+  select, input[type="password"], input[type="email"] {
     font: inherit; font-weight: 700; font-size: 17px; width: 100%; padding: 0.7rem 0.8rem; border-radius: 12px;
     border: 1.5px solid var(--border); background: var(--panel, var(--surface)); color: var(--text);
   }
@@ -1113,7 +1113,7 @@
     background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
     background-position: calc(100% - 20px) 55%, calc(100% - 14px) 55%; background-size: 6px 6px; background-repeat: no-repeat;
   }
-  select:focus, input[type="password"]:focus { outline: none; border-color: var(--gold-lo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 22%, transparent); }
+  select:focus, input[type="password"]:focus, input[type="email"]:focus { outline: none; border-color: var(--gold-lo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 22%, transparent); }
   .tr-note { background: color-mix(in srgb, var(--gold) 14%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent); padding: 0.6rem 0.75rem; border-radius: 12px; font-size: 0.9rem; }
   .tr-pick .row button { flex: none; white-space: nowrap; }
   .tr-field { margin-top: 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
@@ -1255,7 +1255,72 @@
   #trlogin { z-index: 13; }
   .trm-modal, .trl-modal { max-width: 560px; }
   .trl-modal { max-width: 420px; }
-  .trl-err { color: var(--minus); font-weight: 800; min-height: 1.2em; margin: 0.5rem 0; }
+  /* Error / status messages inside pop-ups and forms */
+  .trl-err {
+    position: relative; display: block; margin: 0.6rem 0; padding: 0.6rem 0.75rem 0.6rem 2.2rem; border-radius: 12px;
+    color: var(--minus); font-weight: 800; font-size: 0.92rem; line-height: 1.35;
+    background: color-mix(in srgb, var(--danger) 9%, var(--panel, var(--surface)));
+    border: 1px solid color-mix(in srgb, var(--danger) 38%, transparent);
+  }
+  .trl-err::before { content: "⚠️"; position: absolute; left: 0.7rem; top: 0.55rem; }
+  .trl-err:empty { display: none; }
+  .trl-err[data-kind="info"] { color: var(--text); background: color-mix(in srgb, var(--gold) 12%, var(--panel, var(--surface))); border-color: color-mix(in srgb, var(--gold) 45%, transparent); }
+  .trl-err[data-kind="info"]::before { content: "⏳"; }
+  .ask-actions.single { grid-template-columns: 1fr; }
+  .trl-modal label { margin-top: 0.8rem; }
+
+  /* Score editor */
+  .tr-ew { max-height: none; margin-top: 0.4rem; }
+  .tr-etable { width: 100%; border-collapse: collapse; }
+  .tr-etable th, .tr-etable td { padding: 0.35rem 0.25rem; text-align: center; vertical-align: middle; }
+  .tr-etable th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold); max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr-etable td.fno { font-weight: 900; color: var(--muted); width: 1.6rem; }
+  .tr-num { width: 4.4rem !important; padding: 0.45rem 0.3rem !important; text-align: center; font-variant-numeric: tabular-nums; }
+  .tr-wtog { display: inline-flex; gap: 3px; padding: 3px; border-radius: 999px; background: var(--surface-2); max-width: 100%; }
+  .tr-wtog button { min-height: 34px; padding: 0.3rem 0.55rem; font-size: 0.78rem; border-radius: 999px; background: transparent; border: none !important; max-width: 5.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr-wtog button[aria-pressed="true"] { background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo)); color: var(--accent-text); }
+  .tr-cur { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+  .tr-cur label, .tr-hbs label { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.4rem 0 0; font-size: 0.8rem; min-width: 0; }
+  .tr-cur label span, .tr-hbs label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tr-hbs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .tr-esum { margin: 0.8rem 0 0.2rem; padding: 0.55rem 0.75rem; border-radius: 12px; text-align: center; font-weight: 900; background: color-mix(in srgb, var(--gold) 12%, var(--surface-2)); }
+  .tr-esum small { display: block; font-weight: 700; color: var(--muted); }
+  .tr-editlink { width: 100%; margin-top: 0.55rem; }
+  .tr-msub { margin: -0.25rem 0 0.5rem; }
+
+  /* Player details: tables */
+  .tr-kvs { display: grid; grid-template-columns: 1fr; gap: 0.6rem; margin: 0.5rem 0 0.75rem; }
+  .tr-kvbox { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--panel, var(--surface)); }
+  .tr-kvbox h4 { margin: 0; padding: 0.45rem 0.7rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, var(--panel, var(--surface))); }
+  .tr-kv { width: 100%; border-collapse: collapse; }
+  .tr-kv th, .tr-kv td { padding: 0.42rem 0.7rem; border-bottom: 1px solid var(--border); }
+  .tr-kv tr:last-child th, .tr-kv tr:last-child td { border-bottom: none; }
+  .tr-kv th { text-align: left; font-weight: 700; color: var(--muted); font-size: 0.88rem; }
+  .tr-kv td { text-align: right; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .tr-kv td.gold { color: var(--gold); }
+  .tr-htable { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .tr-htable th, .tr-htable td { padding: 0.45rem 0.4rem; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tr-htable th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold); background: color-mix(in srgb, var(--gold) 12%, var(--panel, var(--surface))); }
+  .tr-htable .l { text-align: left; white-space: normal; font-weight: 800; }
+  /* Player database table */
+  .tr-dbt tbody tr { cursor: pointer; }
+  .tr-dbt tbody tr:hover td, .tr-dbt tbody tr:focus-visible td { background: color-mix(in srgb, var(--gold) 10%, var(--panel, var(--surface))); }
+  .tr-dbt tbody tr:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .tr-dbt th:nth-child(1), .tr-dbt td:nth-child(1) { width: auto; min-width: 0; text-align: left; }
+  .tr-dbt th:nth-child(2), .tr-dbt td:nth-child(2) { position: static; box-shadow: none; }
+  .tr-dbt td.nm { max-width: 12rem; }
+  .tr-dbt td.ph { color: var(--muted); font-weight: 700; }
+
+  /* Desktop: use the extra width */
+  @media (min-width: 640px) { .tr-kvs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1000px) {
+    .tr-main, .tr-tabs { max-width: 1120px; }
+    .tr-2col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+    .tr-2col > .card { margin: 0; }
+    .tr-fix { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .trm-modal.trm-wide { max-width: 860px; }
+    .trm-wide .tr-kvs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
   .tr-vs { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.5rem; margin: 0.5rem 0 1rem; }
   .tr-vp { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; text-align: center; min-width: 0; }
   .tr-vp b { font-size: 1.05rem; max-width: 100%; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.2; }
@@ -1493,7 +1558,7 @@
 
 <!-- ========== Tournament admin login ========== -->
 <div id="trlogin" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="trl-title">
-  <form class="modal trl-modal" id="trl-form" autocomplete="on">
+  <form class="modal trl-modal" id="trl-form" autocomplete="on" novalidate>
     <div class="modal-head">
       <h2 id="trl-title">🏆 Tournament admin</h2>
       <button type="button" class="ghost" id="trl-close" aria-label="Close">✕</button>
@@ -1612,7 +1677,7 @@
     { name: "Maroon", value: 21, cls: "maroon", key: "r" },
   ];
   const FOULS = [4, 5, 6, 7, 21];
-  const APP_VERSION = 31; // shown in the menu so you can confirm the phone has the latest version
+  const APP_VERSION = 32; // shown in the menu so you can confirm the phone has the latest version
   const PALETTE = [
     "#e63946", "#2563eb", "#16a34a", "#f59e0b", "#9333ea", "#0891b2",
     "#db2777", "#ea580c", "#65a30d", "#4f46e5", "#0f172a", "#a16207",
@@ -1783,27 +1848,31 @@
   // ================= Themed confirm dialog =================
   // askConfirm({ title, message, confirmText, icon, danger }) → Promise<boolean>
   let askResolve = null, askFocus = null;
-  function askConfirm({ title, message, confirmText = "OK", icon = "?", danger = false }) {
+  function askConfirm({ title, message, confirmText = "OK", icon = "?", danger = false, alert = false }) {
     if (askResolve) askResolve(false); // only one at a time
     askFocus = document.activeElement;
     $("ask-title").textContent = title;
     $("ask-msg").textContent = message;
     $("ask-icon").textContent = icon;
-    $("ask-icon").classList.toggle("danger", danger);
+    $("ask-icon").classList.toggle("danger", danger || alert);
+    $("ask-no").classList.toggle("hidden", alert);
+    $("ask-yes").parentElement.classList.toggle("single", alert);
     const yes = $("ask-yes");
     yes.textContent = confirmText;
     yes.className = danger ? "danger" : "primary";
     $("ask").classList.remove("hidden");
     document.body.classList.add("lock");
-    setTimeout(() => $("ask-no").focus(), 30); // safe default: Cancel
+    setTimeout(() => (alert ? $("ask-yes") : $("ask-no")).focus(), 30); // safe default: Cancel
     return new Promise(res => { askResolve = res; });
   }
+  // Themed message with a single OK button (used instead of the browser's alert()).
+  const alertBox = (title, message, icon = "⚠️") => askConfirm({ title, message, icon, confirmText: "OK", alert: true });
   function closeAsk(answer) {
     if (!askResolve) return;
     const res = askResolve;
     askResolve = null;
     $("ask").classList.add("hidden");
-    if (state) renderResults(); else document.body.classList.toggle("lock", !!ui.final || ui.bkp);
+    if (state) renderResults(); else document.body.classList.toggle("lock", !!ui.final || ui.bkp || !!ui.tour || !$("trlogin").classList.contains("hidden"));
     if (askFocus && document.contains(askFocus)) askFocus.focus({ preventScroll: true });
     res(answer);
   }
@@ -2815,7 +2884,7 @@
   function toast(msg, isFoul = false) {
     const t = $("toast");
     t.textContent = msg;
-    t.classList.toggle("foul", isFoul);
+    t.classList.toggle("foul", isFoul || /^⚠️/.test(msg)); // warnings use the red style
     t.classList.remove("hidden");
     t.style.animation = "none"; void t.offsetWidth; t.style.animation = "";
     clearTimeout(toastTimer);
@@ -3042,6 +3111,7 @@
       if (state && state.ended && ui.modalOpen) { ui.modalOpen = false; renderResults(); }
       return;
     }
+    if (ui.tour || !$("trlogin").classList.contains("hidden")) return; // tournament page has its own controls
     if (!state || ui.dlg !== null || ui.cp !== null || ui.hist || ui.addp !== null || ui.bkp || ui.ren !== null || drawerOpen() || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName || "")) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -3856,6 +3926,7 @@
     $("trl-user").value = "";
     $("trl-pass").value = "";
     $("trl-err").textContent = "";
+    $("trl-err").dataset.kind = "";
     $("trlogin").classList.remove("hidden");
     document.body.classList.add("lock");
     setTimeout(() => $("trl-user").focus(), 30);
@@ -3992,7 +4063,7 @@
   }
 
   function setupView(t) {
-    const wrap = el("div", { class: "tr-view" });
+    const wrap = el("div", { class: "tr-view tr-2col" });
     const locked = t.stage !== "setup";
     const set = (k, v) => { t[k] = v; touch(t); renderTour(); };
     const n = t.players.length, P = poolsFor(t);
@@ -4116,7 +4187,7 @@
           } })
         : el("button", { type: "button", class: "primary big", text: "✅ Generate fixtures", disabled: n < 2, onclick: () => {
             const e2 = generateFixtures(t);
-            if (e2) { toast(e2); return; }
+            if (e2) { alertBox("Can't create fixtures", e2); return; }
             touch(t); tu.tab = "fixtures"; renderTour(); toast(`📅 ${t.matches.length} fixtures created`);
           } }),
     ]));
@@ -4129,29 +4200,37 @@
   function dbView() {
     const wrap = el("div", { class: "tr-view" });
     const q = el("input", { type: "search", id: "tr-dbq", placeholder: "Search name, ID or phone", value: tu.dbq, autocomplete: "off", "aria-label": "Search players" });
-    const list = el("div", { class: "tr-plist" });
+    const list = el("div", { class: "tr-dblist" });
     const draw = () => {
       const s = tu.dbq.trim().toUpperCase(), digits = s.replace(/\D/g, "");
       const rows = pdb.filter(p => !s || p.name.includes(s) || p.id.includes(s) || (tu.admin && digits.length >= 3 && p.phone.includes(digits)))
         .sort((a, b) => a.name.localeCompare(b.name));
       list.innerHTML = "";
-      if (!rows.length) list.appendChild(el("p", { class: "muted", text: pdb.length ? "No players match." : "No players yet. Players are added when the admin enters them in a tournament." }));
-      rows.forEach(p => {
-        const st = playerStats(p.id);
-        list.appendChild(el("button", { type: "button", class: "tr-prow tr-dbrow", "data-fk": `tr-db-${p.id}`, onclick: () => openTrm({ kind: "player", pid: p.id }) }, [
-          el("span", { class: "tr-prn" }, [el("b", { text: p.name }), el("small", { class: "muted", text: `ID ${p.id} · ${tu.admin ? p.phone || "no phone" : maskPhone(p.phone)}` })]),
-          el("span", { class: "tr-pst" }, [
-            el("small", { text: `${st.tours} tournament${st.tours === 1 ? "" : "s"}${st.titles ? ` · 🏆 ${st.titles}` : ""}` }),
-            el("small", { class: "muted", text: `W ${st.w} · L ${st.l} · HB ${st.hb}` }),
-          ]),
-        ]));
-      });
+      if (!rows.length) { list.appendChild(el("p", { class: "muted", text: pdb.length ? "No players match." : "No players yet. Players are added when the admin enters them in a tournament." })); return; }
+      const cols = ["Player", "ID", tu.admin ? "Phone" : null, "Tours", "🏆", "MP", "W", "D", "L", "HB"].filter(Boolean);
+      list.appendChild(el("div", { class: "table-wrap tr-tw" }, [el("table", { class: "tr-table tr-dbt" }, [
+        el("thead", {}, [el("tr", {}, cols.map((c, i) => el("th", { text: c, class: i === 0 ? "l" : "" })))]),
+        el("tbody", {}, rows.map(p => {
+          const st = playerStats(p.id);
+          const open = () => openTrm({ kind: "player", pid: p.id });
+          return el("tr", { tabindex: "0", role: "button", "data-fk": `tr-db-${p.id}`, class: "tr-dbrow", "aria-label": `${p.name}, details`, onclick: open,
+            onkeydown: e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } } }, [
+            el("td", { class: "l nm", text: p.name }),
+            el("td", { text: p.id }),
+            tu.admin ? el("td", { class: "ph", text: p.phone || "—" }) : null,
+            el("td", { text: String(st.tours) }),
+            el("td", { class: st.titles ? "pts" : "", text: String(st.titles) }),
+            el("td", { text: String(st.mp) }), el("td", { text: String(st.w) }), el("td", { text: String(st.d) }), el("td", { text: String(st.l) }),
+            el("td", { class: "pts", text: String(st.hb) }),
+          ]);
+        })),
+      ])]));
     };
     q.addEventListener("input", () => { tu.dbq = q.value; draw(); });
     draw();
     wrap.appendChild(el("div", { class: "card" }, [
       el("h2", { text: `Player database (${pdb.length})` }),
-      el("p", { class: "muted small", text: "Every player's results across all tournaments on this device. Tap a player for full details." }),
+      el("p", { class: "muted small", text: "Every player's results across all tournaments. Tap a player for full details." }),
       q,
       tu.admin ? el("button", { type: "button", class: "primary", "data-fk": "tr-dbnew", text: "＋ Register player", onclick: () => openTrm({ kind: "pform" }) }) : null,
       list,
@@ -4163,29 +4242,41 @@
     const p = dbById(pid);
     const close = () => { closeTrm(); renderTour(); };
     const head = el("div", { class: "modal-head" }, [el("h2", { id: "trm-title", text: p ? p.name : "Player" }), el("button", { type: "button", class: "ghost", "aria-label": "Close", text: "✕", onclick: close })]);
-    if (!p) return el("div", {}, [head, el("p", { class: "muted", text: "This player isn't in the player database on this device." })]);
+    if (!p) return el("div", {}, [head, el("p", { class: "muted", text: "This player isn't in the player database." })]);
     const st = playerStats(pid);
     const pct = st.mp ? Math.round((st.w / st.mp) * 100) : 0;
-    const box = (k, v) => el("div", { class: "tr-stat" }, [el("b", { text: String(v) }), el("small", { text: k })]);
+    const fd = st.fw - st.fl;
+    const row = (k, v, cls) => el("tr", {}, [el("th", { scope: "row", text: k }), el("td", { class: cls || "", text: String(v) })]);
+    const box = (title, rows) => el("div", { class: "tr-kvbox" }, [el("h4", { text: title }), el("table", { class: "tr-kv" }, [el("tbody", {}, rows)])]);
+    const kvs = el("div", { class: "tr-kvs" }, [
+      box("Player", [
+        row("Player ID", p.id, "gold"),
+        row("Phone", tu.admin ? p.phone || "—" : maskPhone(p.phone)),
+        row("Tournaments", st.tours),
+        row("Titles won", st.titles, st.titles ? "gold" : ""),
+        tu.admin ? row("Entry fee paid", `${st.paid} of ${st.tours}`) : null,
+      ]),
+      box("Matches", [row("Played", st.mp), row("Won", st.w), row("Drawn", st.d), row("Lost", st.l), row("Win %", `${pct}%`, "gold")]),
+      box("Frames & breaks", [row("Frames won", st.fw), row("Frames lost", st.fl), row("Frame difference", (fd > 0 ? "+" : "") + fd, fd > 0 ? "pos-fd" : fd < 0 ? "neg-fd" : ""), row("Highest break", st.hb, "gold"), row("Highest score", st.hs)]),
+    ]);
+    const hist = st.history.length ? el("div", { class: "table-wrap tr-ew" }, [el("table", { class: "tr-htable" }, [
+      el("thead", {}, [el("tr", {}, ["Tournament", "P", "W", "D", "L", tu.admin ? "Fee" : null, "Result"].filter(Boolean).map((c, i) => el("th", { text: c, class: i === 0 ? "l" : "" })))]),
+      el("tbody", {}, st.history.map(h => el("tr", {}, [
+        el("td", { class: "l", text: h.name }),
+        el("td", { text: String(h.mp) }), el("td", { text: String(h.w) }), el("td", { text: String(h.d) }), el("td", { text: String(h.l) }),
+        tu.admin ? el("td", {}, [el("small", { class: `tr-fee ${h.fee}`, text: h.fee === "paid" ? "Paid" : "Not paid" })]) : null,
+        el("td", { class: h.champ ? "tr-champ" : "muted", text: h.champ ? "🏆 Champion" : "—" }),
+      ]))),
+    ])]) : el("p", { class: "muted small", text: "Not in any tournament yet." });
     return el("div", {}, [
       head,
-      el("p", { class: "muted small", text: `Player ID ${p.id} · Phone ${tu.admin ? p.phone || "—" : maskPhone(p.phone)}` }),
-      el("div", { class: "tr-stats" }, [
-        box("Tournaments", st.tours), box("Titles", st.titles), box("Matches", st.mp), box("Win %", `${pct}%`),
-        box("Won", st.w), box("Drawn", st.d), box("Lost", st.l), box("Frame diff", (st.fw - st.fl > 0 ? "+" : "") + (st.fw - st.fl)),
-        box("Frames won", st.fw), box("Frames lost", st.fl), box("Highest break", st.hb), box("Highest score", st.hs),
-      ]),
-      tu.admin && st.tours ? el("p", { class: "muted small", text: `Entry fee paid in ${st.paid} of ${st.tours} tournament${st.tours === 1 ? "" : "s"}.` }) : null,
+      kvs,
       el("h3", { text: "Tournaments" }),
-      st.history.length ? el("ul", { class: "tr-hist" }, st.history.map(h => el("li", {}, [
-        el("b", { text: h.name }), ` · P ${h.mp} W ${h.w}${h.d ? ` D ${h.d}` : ""} L ${h.l}`,
-        h.champ ? el("span", { class: "tr-champ", text: " 🏆 Champion" }) : null,
-        tu.admin ? el("small", { class: `tr-fee ${h.fee}`, text: h.fee === "paid" ? "Paid" : "Not paid" }) : null,
-      ]))) : el("p", { class: "muted small", text: "Not in any tournament yet." }),
-      el("p", { class: "muted small", text: "Highest score = most points in a single live-scored frame." }),
+      hist,
+      el("p", { class: "muted small", text: "Highest score = most points in one frame (from frames with points entered)." }),
       tu.admin ? el("div", { class: "ask-actions" }, [
         el("button", { type: "button", class: "danger", text: "🗑 Delete", disabled: st.tours > 0, title: st.tours ? "Remove them from their tournaments first" : "", onclick: async () => {
-          const okGo = await askConfirm({ title: `Delete ${p.name}?`, icon: "🗑", confirmText: "Delete player", danger: true, message: "They'll be removed from the player database on this device." });
+          const okGo = await askConfirm({ title: `Delete ${p.name}?`, icon: "🗑", confirmText: "Delete player", danger: true, message: "They'll be removed from the player database." });
           if (!okGo) return;
           pdb = pdb.filter(x => x.id !== p.id); saveDb(); closeTrm(); renderTour(); toast("Player deleted");
         } }),
@@ -4373,7 +4464,7 @@
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
-    if (f.size > 5 * 1024 * 1024) { toast("⚠️ File is too large"); return; }
+    if (f.size > 5 * 1024 * 1024) { alertBox("File is too large", "Tournament files are much smaller than 5 MB. Check you picked the right file."); return; }
     const reader = new FileReader();
     reader.onload = async () => {
       let t;
@@ -4382,7 +4473,7 @@
         t = sanitizeTour(d && d.app === "snooker-century-tournament" ? d.tournament : d);
         if (t) t._roster = d && Array.isArray(d.roster) ? d.roster : [];
       } catch (_) { t = null; }
-      if (!t || !t.players) { toast("⚠️ That isn't a tournament file"); return; }
+      if (!t || !t.players) { alertBox("That isn't a tournament file", "Choose a .json file that was shared from the Tournament page."); return; }
       const roster = t._roster; delete t._roster;
       const existing = tours.find(x => x.id === t.id);
       if (existing) {
@@ -4426,7 +4517,7 @@
       card.appendChild(el("p", { class: "muted", text: `Top ${t.qualify} from each pool go into the bracket once all pool matches are finished.` }));
       if (tu.admin) card.appendChild(el("button", { type: "button", class: "primary", text: "🏆 Generate knockout", disabled: !poolsDone(t), onclick: () => {
         const err = generateKO(t);
-        if (err) { toast(err); return; }
+        if (err) { alertBox("Can't create the knockout", err); return; }
         touch(t); renderTour(); toast("🏆 Knockout bracket created");
       } }));
     } else {
@@ -4434,7 +4525,7 @@
       if (tu.admin) card.appendChild(el("button", { type: "button", class: "ghost", text: "↺ Redraw knockout", onclick: async () => {
         const okGo = await askConfirm({ title: "Redraw the knockout?", icon: "↺", confirmText: "Redraw", danger: true, message: "All knockout results will be cleared and the bracket rebuilt from the current pool standings." });
         if (!okGo) return;
-        const err = generateKO(t); if (err) toast(err); touch(t); renderTour();
+        const err = generateKO(t); if (err) alertBox("Can't redraw the knockout", err); touch(t); renderTour();
       } }));
     }
     wrap.appendChild(card);
@@ -4559,6 +4650,7 @@
     const t = curT();
     box.innerHTML = "";
     box.classList.toggle("trm-live", tu.modal.kind === "live");
+    box.classList.toggle("trm-wide", tu.modal.kind === "player" || tu.modal.kind === "result");
     if (tu.modal.kind === "pw") { box.appendChild(pwView()); return; }
     if (tu.modal.kind === "player") { box.appendChild(playerView(tu.modal.pid)); return; }
     if (tu.modal.kind === "pform") { if (!tu.admin) { closeTrm(); return; } box.appendChild(pformView(tu.modal.pid)); return; }
@@ -4570,7 +4662,7 @@
     ]);
     const title = m.stage === "ko" ? `Knockout · ${roundName(t.ko.find(r => r.includes(m.id)).length)}` : `${poolName(m.pool, t)} · Round ${m.round}`;
     if (tu.modal.kind === "live" && m.live) { box.appendChild(liveView(t, m, head)); return; }
-    if (tu.modal.kind === "result") { box.appendChild(resultView(t, m, head(title))); return; }
+    if (tu.modal.kind === "result") { if (!tu.admin) { tu.modal = { kind: "match", mid: m.id }; } else { box.appendChild(resultView(t, m, head, title)); return; } }
 
     // Match details
     const w = winnerOf(m);
@@ -4593,7 +4685,7 @@
     if (tu.admin && ready) {
       box.appendChild(el("div", { class: "tr-stack" }, [
         m.status !== "done" ? el("button", { type: "button", class: "primary big", "data-fk": "tr-live", text: m.status === "live" ? "▶ Resume live scoring" : "▶ Live score", onclick: () => { liveStart(t, m); tu.modal = { kind: "live", mid: m.id }; renderTour(); } }) : null,
-        el("button", { type: "button", class: "ghost", "data-fk": "tr-result", text: "✍ Enter result", onclick: () => { tu.modal = { kind: "result", mid: m.id }; renderTrm(); } }),
+        el("button", { type: "button", class: "ghost", "data-fk": "tr-result", text: m.status === "done" ? "✎ Edit result & frame scores" : m.status === "live" ? "✎ Edit scores" : "✍ Enter result", onclick: () => { tu.modal = { kind: "result", mid: m.id }; renderTrm(); } }),
         m.status === "done" || m.status === "live" ? el("button", { type: "button", class: "danger", text: "↺ Reset match", onclick: async () => {
           const okGo = await askConfirm({ title: "Reset this match?", icon: "↺", confirmText: "Reset match", danger: true, message: "The result and frames for this match will be cleared." });
           if (!okGo) return;
@@ -4605,43 +4697,138 @@
     }
   }
 
-  function resultView(t, m, head) {
-    const n = need(t);
-    let fa = m.status === "done" ? m.fa : 0, fb = m.status === "done" ? m.fb : 0;
-    const hbA = el("input", { type: "number", inputmode: "numeric", min: "0", max: "147", value: String(m.hbA), "aria-label": `${pname(t, m.a)} highest break` });
-    const hbB = el("input", { type: "number", inputmode: "numeric", min: "0", max: "147", value: String(m.hbB), "aria-label": `${pname(t, m.b)} highest break` });
+  // Enter or correct a result: frames won, points for every frame, the live frame and highest breaks.
+  function resultView(t, m, head, title) {
+    const n = need(t), live = m.status === "live" && !!m.live;
+    const A = pname(t, m.a), B = pname(t, m.b);
+    const first = nm => nm.split(" ")[0] || nm;
+    let frames = m.frameLog.length === m.fa + m.fb ? m.frameLog.map(f => ({ a: f.a, b: f.b, w: f.w, pick: f.w })) : [];
+    let quick = !live && !frames.length;                       // frames won only
+    let qa = m.status === "done" ? m.fa : 0, qb = m.status === "done" ? m.fb : 0;
+    const cur = live ? { a: m.live.sa, b: m.live.sb, reds: m.live.reds } : null;
+    let hbA = m.hbA, hbB = m.hbB;
+    const wrap = el("div", { class: "tr-edit" });
     const err = el("p", { class: "trl-err", role: "alert" });
-    const wrap = el("div", {});
+    const sum = el("div", { class: "tr-esum", "aria-live": "polite" });
+    const label = live ? "✎ Edit scores" : m.status === "done" ? "✎ Edit result" : "✍ Enter result";
+    const rule = `Best of ${t.frames}: first to ${n} frames${m.stage === "pool" && t.frames % 2 === 0 ? ` (or ${t.frames / 2}–${t.frames / 2} draw)` : ""}.`;
+    const counts = () => (quick ? [qa, qb] : [frames.filter(f => f.w === "a").length, frames.filter(f => f.w === "b").length]);
+    const num = (val, max, aria, onChange, cls) => {
+      const i = el("input", { type: "number", inputmode: "numeric", min: "0", max: String(max), value: String(val), "aria-label": aria, class: cls || "tr-num" });
+      i.addEventListener("input", () => onChange(Math.max(0, Math.min(max, parseInt(i.value, 10) || 0))));
+      i.addEventListener("change", () => { const v = Math.max(0, Math.min(max, parseInt(i.value, 10) || 0)); i.value = String(v); onChange(v); });
+      return i;
+    };
+    const summary = () => {
+      const [fa, fb] = counts();
+      const decided = matchDecided(t, { stage: m.stage, fa, fb });
+      sum.innerHTML = "";
+      sum.append(`${first(A)} ${fa} – ${fb} ${first(B)}`, el("small", { text:
+        live ? (decided ? "Saving will finish the match." : "The match carries on after saving.")
+          : validResult(t, m.stage, fa, fb) ? `Not a final score yet — ${rule}` : fa === fb ? "Draw" : `${fa > fb ? A : B} wins` }));
+    };
+    const frameRow = (f, i) => {
+      const tog = el("div", { class: "tr-wtog", role: "group", "aria-label": `Frame ${i + 1} winner` });
+      const paint = () => {
+        tog.innerHTML = "";
+        [["a", A], ["b", B]].forEach(([sd, nm]) => tog.appendChild(el("button", {
+          type: "button", "aria-pressed": String(f.w === sd), "aria-label": `${nm} won frame ${i + 1}`, title: nm, text: first(nm),
+          onclick: () => { f.w = sd; f.pick = sd; paint(); summary(); },
+        })));
+      };
+      // Winner follows the points; when they're level it's whoever was picked by hand (or nobody yet).
+      const auto = () => { f.w = f.a > f.b ? "a" : f.b > f.a ? "b" : f.pick || null; paint(); summary(); };
+      paint();
+      return el("tr", {}, [
+        el("td", { class: "fno", text: String(i + 1) }),
+        el("td", {}, [num(f.a, 200, `Frame ${i + 1}, ${A} points`, v => { f.a = v; auto(); })]),
+        el("td", {}, [num(f.b, 200, `Frame ${i + 1}, ${B} points`, v => { f.b = v; auto(); })]),
+        el("td", {}, [tog]),
+        el("td", {}, [el("button", { type: "button", class: "tr-x", "aria-label": `Remove frame ${i + 1}`, text: "✕", onclick: () => { frames.splice(i, 1); draw(); } })]),
+      ]);
+    };
     const draw = () => {
       wrap.innerHTML = "";
-      wrap.append(
-        head,
-        el("p", { class: "muted small", text: `Best of ${t.frames}: first to ${n} frames${m.stage === "pool" && t.frames % 2 === 0 ? ` (or ${t.frames / 2}–${t.frames / 2} draw)` : ""}.` }),
-        el("div", { class: "tr-res" }, [
-          stepper(pname(t, m.a), fa, 0, n, v => { fa = v; draw(); }, false, "frames won"),
-          stepper(pname(t, m.b), fb, 0, n, v => { fb = v; draw(); }, false, "frames won"),
-        ]),
-        el("div", { class: "tr-res" }, [
-          el("label", {}, [`HB · ${pname(t, m.a)}`, hbA]),
-          el("label", {}, [`HB · ${pname(t, m.b)}`, hbB]),
-        ]),
-        err,
-        el("div", { class: "ask-actions" }, [
-          el("button", { type: "button", class: "ghost", text: "Back", onclick: () => { tu.modal = { kind: "match", mid: m.id }; renderTrm(); } }),
-          el("button", { type: "button", class: "primary", "data-fk": "tr-save", text: "Save result", onclick: () => {
-            const msg = validResult(t, m.stage, fa, fb);
-            if (msg) { err.textContent = msg; return; }
-            const ha = Math.min(147, Math.max(0, parseInt(hbA.value, 10) || 0)), hb = Math.min(147, Math.max(0, parseInt(hbB.value, 10) || 0));
-            Object.assign(m, { fa, fb, hbA: ha, hbB: hb, status: "done", live: null });
-            if (m.frameLog.length !== fa + fb) m.frameLog = [];
-            if (m.stage === "ko") propagateKO(t);
-            touch(t);
-            tu.modal = { kind: "match", mid: m.id };
-            renderTour();
-            toast("✔ Result saved");
-          } }),
-        ]),
-      );
+      err.textContent = "";
+      const parts = [head(label), el("p", { class: "muted small tr-msub", text: `${title} · ${A} vs ${B}` }), el("p", { class: "muted small", text: rule })];
+      if (quick) {
+        parts.push(el("div", { class: "tr-res" }, [
+          stepper(A, qa, 0, n, v => { qa = v; draw(); }, false, "frames won"),
+          stepper(B, qb, 0, n, v => { qb = v; draw(); }, false, "frames won"),
+        ]));
+        parts.push(el("button", { type: "button", class: "ghost tr-editlink", "data-fk": "tr-addscores", text: "＋ Enter the points for each frame", onclick: () => {
+          quick = false;
+          for (let i = 0; i < qa; i++) frames.push({ a: 0, b: 0, w: "a", pick: "a" });
+          for (let i = 0; i < qb; i++) frames.push({ a: 0, b: 0, w: "b", pick: "b" });
+          if (!frames.length) frames.push({ a: 0, b: 0, w: null, pick: null });
+          draw();
+        } }));
+      } else {
+        parts.push(el("h3", { text: live ? "Finished frames" : "Frame scores" }));
+        parts.push(frames.length
+          ? el("div", { class: "table-wrap tr-ew" }, [el("table", { class: "tr-etable" }, [
+              el("thead", {}, [el("tr", {}, [el("th", { text: "#" }), el("th", { text: first(A), title: A }), el("th", { text: first(B), title: B }), el("th", { text: "Won by" }), el("th", { text: "" })])]),
+              el("tbody", {}, frames.map(frameRow)),
+            ])])
+          : el("p", { class: "muted small", text: live ? "No frames finished yet." : "No frames yet." }));
+        const maxF = live ? t.frames - 1 : t.frames;
+        parts.push(el("div", { class: "row" }, [
+          el("button", { type: "button", class: "ghost", "data-fk": "tr-addframe", text: "＋ Add frame", disabled: frames.length >= maxF, onclick: () => { frames.push({ a: 0, b: 0, w: null, pick: null }); draw(); } }),
+          !live && !frames.some(f => f.a || f.b) ? el("button", { type: "button", class: "ghost", text: "Frames won only", onclick: () => { [qa, qb] = counts(); frames = []; quick = true; draw(); } }) : null,
+        ]));
+      }
+      if (live) {
+        parts.push(el("h3", { text: `Frame ${frames.length + 1} (being played)` }));
+        parts.push(el("div", { class: "tr-cur" }, [
+          el("label", {}, [el("span", { text: `${first(A)} points` }), num(cur.a, 200, `${A} points this frame`, v => { cur.a = v; }, "tr-curin")]),
+          el("label", {}, [el("span", { text: `${first(B)} points` }), num(cur.b, 200, `${B} points this frame`, v => { cur.b = v; }, "tr-curin")]),
+          el("label", {}, [el("span", { text: "Reds left" }), num(cur.reds, 15, "Reds left on the table", v => { cur.reds = v; }, "tr-curin")]),
+        ]));
+      }
+      parts.push(el("h3", { text: "Highest break" }));
+      parts.push(el("div", { class: "tr-hbs" }, [
+        el("label", {}, [el("span", { text: A }), num(hbA, 147, `${A} highest break`, v => { hbA = v; }, "tr-curin")]),
+        el("label", {}, [el("span", { text: B }), num(hbB, 147, `${B} highest break`, v => { hbB = v; }, "tr-curin")]),
+      ]));
+      parts.push(sum, err, el("div", { class: "ask-actions" }, [
+        el("button", { type: "button", class: "ghost", text: "Back", onclick: () => { tu.modal = { kind: live ? "live" : "match", mid: m.id }; renderTrm(); } }),
+        el("button", { type: "button", class: "primary", "data-fk": "tr-save", text: live ? "Save changes" : "Save result", onclick: save }),
+      ]));
+      wrap.append(...parts);
+      summary();
+    };
+    const save = async () => {
+      err.textContent = "";
+      if (!quick) {
+        const tie = frames.findIndex(f => !f.w);
+        if (tie >= 0) { err.textContent = `Frame ${tie + 1}: the points are level — choose who won it.`; return; }
+      }
+      const [fa, fb] = counts();
+      if (Math.max(fa, fb) > n) { err.textContent = `Nobody can win more than ${n} frames (best of ${t.frames}).`; return; }
+      const log = frames.map(f => ({ a: f.a, b: f.b, w: f.w }));
+      if (live) {
+        const finishing = matchDecided(t, { stage: m.stage, fa, fb });
+        if (finishing) {
+          const okGo = await askConfirm({ title: "Finish the match?", icon: "🏁", confirmText: "Finish match", message: `With these frames the score is ${fa}–${fb}, so the match is over. The frame being played will be dropped.` });
+          if (!okGo) return;
+          Object.assign(m, { fa, fb, frameLog: log, status: "done", live: null });
+        } else {
+          Object.assign(m, { fa, fb, frameLog: log });
+          Object.assign(m.live, { sa: cur.a, sb: cur.b, reds: cur.reds, brk: 0 });
+          if (m.live.reds > 0) m.live.ci = 0;
+          tu.undo = [];
+        }
+      } else {
+        const msg = validResult(t, m.stage, fa, fb);
+        if (msg) { err.textContent = msg; return; }
+        Object.assign(m, { fa, fb, status: "done", live: null, frameLog: quick ? [] : log });
+      }
+      m.hbA = hbA; m.hbB = hbB;
+      if (m.stage === "ko") propagateKO(t);
+      touch(t);
+      tu.modal = { kind: m.status === "live" ? "live" : "match", mid: m.id };
+      renderTour();
+      toast(m.status === "live" ? "✔ Scores corrected" : "✔ Result saved");
     };
     draw();
     return wrap;
@@ -4700,6 +4887,7 @@
         el("button", { type: "button", class: "ghost", text: "−1 Red", disabled: L.reds === 0, title: "A red left the table without scoring (e.g. on a foul)", onclick: () => { liveRedOff(t, m); renderTrm(); } }),
         el("button", { type: "button", class: "primary", "data-fk": "tr-endframe", text: "🏁 End frame", onclick: () => { tu.frameEnd = true; renderTrm(); } }),
       ]),
+      el("button", { type: "button", class: "ghost tr-editlink", "data-fk": "tr-edit", text: "✎ Edit scores · fix a mistake", onclick: () => { tu.modal = { kind: "result", mid: m.id }; renderTrm(); } }),
     );
     return wrap;
   }
@@ -4740,9 +4928,7 @@
       e.stopImmediatePropagation();
       return;
     }
-    // Let typing reach the tournament's own inputs (e.g. Enter in "Add players")
-    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName || "")) return;
-    e.stopImmediatePropagation(); // don't let game shortcuts (1–7, E, U…) fire behind the page
+    // Other keys reach the tournament page normally; the game's shortcuts skip themselves while it's open.
   }, true);
 
   // ================= Online storage (Firebase) =================
@@ -4938,22 +5124,25 @@
   }
   async function cloudLogin() {
     const err = $("trl-err"), email = $("trl-user").value.trim(), pass = $("trl-pass").value;
+    err.dataset.kind = "";
     if (!cloud.auth) { err.textContent = cloud.status === "offline" ? "No internet connection." : "Still connecting… try again in a moment."; return; }
     if (!email || !pass) { err.textContent = "Enter your email and password."; return; }
-    err.textContent = "Logging in…";
+    err.textContent = "Logging in…"; err.dataset.kind = "info";
     cloud.loggingIn = true;
     try {
       const cred = await cloud.sdk.signInWithEmailAndPassword(cloud.auth, email, pass);
-      err.textContent = "Checking admin access…";
+      err.textContent = "Checking admin access…"; err.dataset.kind = "info";
       const r = await activateAdmin(cred.user);
       if (r !== true) {
         await cloud.sdk.signOut(cloud.auth).catch(() => {});
+        err.dataset.kind = "";
         err.textContent = r === false ? "This account isn't an admin." : r === "sync" ? "Couldn't load the online data. Check your connection and try again." : "Couldn't check admin access. Check your connection and try again.";
         return;
       }
       loginOk();
     } catch (e) {
       const c = String((e && e.code) || "");
+      err.dataset.kind = "";
       err.textContent = /invalid-credential|wrong-password|user-not-found|invalid-email|missing-password/.test(c) ? "Wrong email or password."
         : /too-many-requests/.test(c) ? "Too many attempts. Wait a few minutes and try again."
         : /network/.test(c) ? "No internet connection." : "Login failed. Try again.";
